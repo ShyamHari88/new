@@ -44,8 +44,8 @@ export const addSubject = async (req, res) => {
             });
         }
 
-        // Create robust UUID for subject
-        const subjectId = `subject-${crypto.randomUUID()}`;
+        // Create robust random hex ID for subject
+        const subjectId = `subject-${crypto.randomBytes(16).toString('hex')}`;
 
         // Create subject
         const subject = await Subject.create({

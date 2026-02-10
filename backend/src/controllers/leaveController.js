@@ -9,8 +9,8 @@ export const applyLeave = async (req, res) => {
     try {
         const { studentId, studentName, rollNumber, type, fromDate, toDate, reason } = req.body;
 
-        // Create robust UUID for request
-        const requestId = `leave-${crypto.randomUUID()}`;
+        // Create robust random hex ID for request
+        const requestId = `leave-${crypto.randomBytes(16).toString('hex')}`;
 
         const leave = await LeaveRequest.create({
             requestId, studentId, studentName, rollNumber, type, fromDate, toDate, reason
