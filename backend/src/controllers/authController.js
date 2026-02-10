@@ -89,7 +89,11 @@ export const studentSignup = async (req, res) => {
         console.error('Student signup error:', error);
         // Only send error response if we haven't sent a success response yet
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Error creating student account', error: error.message });
+            res.status(500).json({
+                message: 'Error creating student account',
+                detailedError: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            });
         }
     }
 };

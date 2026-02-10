@@ -55,7 +55,14 @@ export const authService = {
 
             return userData;
         } catch (error: any) {
-            const message = error.response?.data?.message || error.message || 'Signup failed';
+        } catch (error: any) {
+            const serverMessage = error.response?.data?.message;
+            const detailedError = error.response?.data?.detailedError;
+
+            const message = detailedError
+                ? `${serverMessage}: ${detailedError}`
+                : (serverMessage || error.message || 'Signup failed');
+
             console.error('Student Signup Error:', message, error);
             throw new Error(message);
         }
