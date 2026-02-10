@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose'; // Add this import
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
 import studentRoutes from './routes/students.js';
@@ -65,9 +66,43 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
         message: 'Class Connect Backend Server is running',
-        version: '1.0.2',
+        version: '1.0.3', // Increment version
         timestamp: new Date().toISOString()
     });
+});
+
+// Database Debug Route
+app.get('/debug-db', async (req, res) => {
+    try {
+        const state = mongoose.connection.readyState;
+        const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+
+        let collections = [];
+        let error = null;
+
+        if (state === 1) {
+            try {
+                collections = await mongoose.connection.db.listCollections().toArray();
+                collections = collections.map(c => c.name);
+            } catch (err) {
+                error = err.message;
+            }
+        }
+
+        res.json({
+            status: state === 1 ? 'OK' : 'ERROR',
+            connectionState: states[state] || 'unknown',
+            readyState: state,
+            collections,
+            dbError: error,
+            env: {
+                hasMongoURI: !!process.env.MONGODB_URI,
+                uriStart: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 15) + '...' : 'undefined'
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // API Routes
