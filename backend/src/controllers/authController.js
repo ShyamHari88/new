@@ -31,9 +31,9 @@ export const studentSignup = async (req, res) => {
             });
         }
 
-        // Create student ID using robust UUIDs
-        const studentId = `student-${crypto.randomUUID()}`;
-        const userId = `user-${crypto.randomUUID()}`;
+        // Create student ID using robust random hex
+        const studentId = `student-${crypto.randomBytes(16).toString('hex')}`;
+        const userId = `user-${crypto.randomBytes(16).toString('hex')}`;
 
         // Create user
         const user = await User.create({
@@ -175,8 +175,8 @@ export const teacherSignup = async (req, res) => {
             });
         }
 
-        // Create user ID using robust UUID
-        const userId = `user-${crypto.randomUUID()}`;
+        // Create user ID using robust random hex
+        const userId = `user-${crypto.randomBytes(16).toString('hex')}`;
 
         // Create user
         const user = await User.create({
