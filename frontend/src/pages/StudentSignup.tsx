@@ -46,11 +46,11 @@ export default function StudentSignup() {
 
         setLoading(true);
         const yearMap: Record<string, number> = {
-  "First Year": 1,
-  "Second Year": 2,
-  "Third Year": 3,
-  "Final Year": 4,
-};
+            "First Year": 1,
+            "Second Year": 2,
+            "Third Year": 3,
+            "Final Year": 4,
+        };
 
         try {
             await authService.studentSignup({
@@ -59,8 +59,7 @@ export default function StudentSignup() {
                 rollNumber: formData.rollNumber,
                 password: formData.password,
                 departmentId: formData.departmentId,
-               year: yearMap[formData.year],
-
+                year: formData.year,
                 section: formData.section,
                 currentSemester: formData.currentSemester
             });
