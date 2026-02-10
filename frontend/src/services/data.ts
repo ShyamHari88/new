@@ -958,9 +958,11 @@ export const dataService = {
             // Use direct axios call to avoid default Content-Type header issues
             const { default: axios } = await import('axios');
             const token = localStorage.getItem('token');
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+         const BASE_URL = import.meta.env.VITE_API_URL;
 
-            const response = await axios.post(`${API_URL}/leaves/${requestId}/upload`, formData, {
+          const response = await axios.post(
+  `${BASE_URL}/leaves/${requestId}/upload`,
+  formData, {
                 headers: {
                     'Authorization': token ? `Bearer ${token}` : '',
                     // Let browser set Content-Type with boundary
