@@ -1,0 +1,29 @@
+{
+    "name": "class-connect-backend",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "Backend API for Class Connect Attendance System",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "seed": "node src/scripts/seedData.js",
+        "seed:full": "node src/scripts/seedComprehensiveData.js",
+        "delete:all": "node src/scripts/deleteAllLoginData.js"
+    },
+    "dependencies": {
+        "bcryptjs": "^2.4.3",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-validator": "^7.0.1",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.0.0",
+        "multer": "^2.0.2",
+        "nodemailer": "^7.0.12"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    }
+}
