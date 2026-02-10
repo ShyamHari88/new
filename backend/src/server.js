@@ -65,6 +65,7 @@ app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
         message: 'Class Connect Backend Server is running',
+        version: '1.0.2',
         timestamp: new Date().toISOString()
     });
 });

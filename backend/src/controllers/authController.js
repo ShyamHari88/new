@@ -26,15 +26,24 @@ export const studentSignup = async (req, res) => {
         // Check if user already exists
         const existingUser = await User.findOne({ $or: [{ email }, { rollNumber }] });
         if (existingUser) {
+            console.log(`[AUTH] User duplicate found: ${email} or ${rollNumber}`);
             return res.status(400).json({
                 message: existingUser.email === email ? 'Email already registered' : 'Roll number already registered'
             });
+        }
+
+        // Check if student record exists (zombie check)
+        const existingStudent = await Student.findOne({ rollNumber });
+        if (existingStudent) {
+            console.log(`[AUTH] Student duplicate found: ${rollNumber}`);
+            return res.status(400).json({ message: 'Student record with this roll number already exists' });
         }
 
         // Create student ID using robust random hex
         const studentId = `student-${crypto.randomBytes(16).toString('hex')}`;
         const userId = `user-${crypto.randomBytes(16).toString('hex')}`;
 
+        console.log(`[AUTH] Creating user for ${email}`);
         // Create user
         const user = await User.create({
             userId,
@@ -49,7 +58,9 @@ export const studentSignup = async (req, res) => {
             section,
             currentSemester: currentSemester || 1
         });
+        console.log(`[AUTH] User created: ${user._id}`);
 
+        console.log(`[AUTH] Creating student record for ${rollNumber}`);
         // Create student record
         await Student.create({
             studentId,
@@ -60,6 +71,7 @@ export const studentSignup = async (req, res) => {
             section,
             currentSemester: currentSemester || 1
         });
+        console.log(`[AUTH] Student record created`);
 
         // Generate token
         const token = generateToken(user.userId, user.role);
