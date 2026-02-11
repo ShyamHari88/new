@@ -139,12 +139,11 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // Only listen if the file is being run directly (not imported)
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-    app.listen(PORT, () => {
-        console.log(`\n🚀 Server running on port ${PORT}`);
-        console.log(`📍 Health check: http://localhost:${PORT}/health`);
-        console.log(`📍 API endpoint: http://localhost:${PORT}/api\n`);
-    });
-}
+app.listen(PORT, () => {
+    console.log(`\n🚀 Server running on port ${PORT}`);
+    console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    console.log(`📍 API endpoint: http://localhost:${PORT}/api\n`);
+});
+
 
 export default app;
