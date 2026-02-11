@@ -944,11 +944,13 @@ export const dataService = {
 
     updateLeaveStatus: async (requestId: string, status: string) => {
         try {
+            console.log(`[dataService] Updating leave ${requestId} to status: ${status}`);
             const { default: api } = await import('./api');
             const response = await api.put(`/leaves/${requestId}`, { status });
+            console.log(`[dataService] Leave update response:`, response.data);
             return response.data;
-        } catch (error) {
-            console.error('Error updating leave status:', error);
+        } catch (error: any) {
+            console.error('[dataService] Error updating leave status:', error?.response?.data || error.message);
             throw error;
         }
     },
@@ -958,11 +960,11 @@ export const dataService = {
             // Use direct axios call to avoid default Content-Type header issues
             const { default: axios } = await import('axios');
             const token = localStorage.getItem('token');
-         const BASE_URL = import.meta.env.VITE_API_URL;
+            const BASE_URL = import.meta.env.VITE_API_URL;
 
-          const response = await axios.post(
-  `${BASE_URL}/leaves/${requestId}/upload`,
-  formData, {
+            const response = await axios.post(
+                `${BASE_URL}/leaves/${requestId}/upload`,
+                formData, {
                 headers: {
                     'Authorization': token ? `Bearer ${token}` : '',
                     // Let browser set Content-Type with boundary

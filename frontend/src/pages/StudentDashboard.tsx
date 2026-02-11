@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AssessmentType, Semester } from '@/types/attendance';
 import { semesters, departments } from '@/data/mockData';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { LogOut, CheckCircle2, History, Calendar as CalendarIcon, MessageSquare, ExternalLink, ChevronRight, TrendingUp, ShieldCheck, AlertTriangle, Plus, User, ArrowUpRight, Clock, Download, FileText, Bell, Layout, GraduationCap } from 'lucide-react';
+import { LogOut, CheckCircle2, XCircle, History, Calendar as CalendarIcon, MessageSquare, ExternalLink, ChevronRight, TrendingUp, ShieldCheck, AlertTriangle, Plus, User, ArrowUpRight, Clock, Download, FileText, Bell, Layout, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -100,6 +100,18 @@ export default function StudentDashboard() {
 
         fetchInitialData();
     }, [navigate]);
+
+    // Auto-refresh leave requests every 30 seconds to pick up teacher responses
+    useEffect(() => {
+        if (!studentInfo || studentInfo.id === 'unknown') return;
+        const interval = setInterval(async () => {
+            try {
+                const leaves = await dataService.getStudentLeaves(studentInfo.id);
+                setLeaveRequests(Array.isArray(leaves) ? leaves : []);
+            } catch (e) { /* silent refresh */ }
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [studentInfo]);
 
     useEffect(() => {
         if (!studentInfo || !allSubjectAttendance.length) {
@@ -538,35 +550,110 @@ export default function StudentDashboard() {
                             <ScrollArea className="h-[300px] pr-4">
                                 <div className="space-y-4">
                                     {leaveRequests.length > 0 ? (
-                                        leaveRequests.map((leave, i) => (
-                                            <div key={i} className="flex items-center justify-between p-6 rounded-[2.5rem] bg-slate-50 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/40 border border-slate-100 transition-all duration-300 group/item">
-                                                <div className="flex items-center gap-6">
-                                                    <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm transition-transform duration-500 group-hover/item:scale-110",
-                                                        leave.type === 'On-Duty' ? "bg-blue-50 text-blue-600" : "bg-indigo-50 text-indigo-600")}>
-                                                        {leave.type === 'On-Duty' ? <ShieldCheck className="h-7 w-7" /> : <MessageSquare className="h-7 w-7" />}
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase">{leave.type}</h4>
-                                                            {leave.attachment && <Badge variant="outline" className="h-5 px-1.5 border-blue-100 text-[#3b82f6] text-[8px] font-black tracking-tighter uppercase">Document Linked</Badge>}
+                                        leaveRequests.map((leave, i) => {
+                                            const formatLeaveDate = (d: string) => {
+                                                try { return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
+                                                catch { return d; }
+                                            };
+                                            const isApproved = leave.status === 'approved';
+                                            const isRejected = leave.status === 'rejected';
+                                            const isPending = !isApproved && !isRejected;
+
+                                            return (
+                                                <div key={i} className={cn(
+                                                    "p-6 rounded-[2.5rem] border transition-all duration-300 group/item",
+                                                    isApproved ? "bg-emerald-50/40 border-emerald-100 hover:shadow-xl hover:shadow-emerald-100/30" :
+                                                        isRejected ? "bg-rose-50/40 border-rose-100 hover:shadow-xl hover:shadow-rose-100/30" :
+                                                            "bg-slate-50 border-slate-100 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/40"
+                                                )}>
+                                                    {/* Top row: type + status */}
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm transition-transform duration-500 group-hover/item:scale-110",
+                                                                leave.type === 'On-Duty' ? "bg-blue-50 text-blue-600" :
+                                                                    leave.type === 'Medical' ? "bg-red-50 text-red-600" :
+                                                                        "bg-indigo-50 text-indigo-600")}>
+                                                                {leave.type === 'On-Duty' ? <ShieldCheck className="h-7 w-7" /> :
+                                                                    leave.type === 'Medical' ? <AlertTriangle className="h-7 w-7" /> :
+                                                                        <MessageSquare className="h-7 w-7" />}
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase">{leave.type}</h4>
+                                                                    {(leave.attachments?.length > 0 || leave.attachment) && (
+                                                                        <Badge variant="outline" className="h-5 px-1.5 border-blue-100 text-[#3b82f6] text-[8px] font-black tracking-tighter uppercase">
+                                                                            <Download className="h-2.5 w-2.5 mr-0.5" /> DOC
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-1.5">
+                                                                    <CalendarIcon className="h-3.5 w-3.5 text-slate-400" />
+                                                                    <p className="text-[11px] text-slate-500 font-bold">{formatLeaveDate(leave.fromDate)} — {formatLeaveDate(leave.toDate)}</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2 mt-1.5">
-                                                            <CalendarIcon className="h-3.5 w-3.5 text-slate-400" />
-                                                            <p className="text-[11px] text-slate-500 font-bold">{leave.fromDate} — {leave.toDate}</p>
+                                                        <div className="text-right">
+                                                            <Badge className={cn("text-[9px] font-black h-7 px-4 rounded-full uppercase tracking-widest border shadow-sm",
+                                                                isApproved ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                                    isRejected ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                                                        "bg-blue-50 text-blue-600 border-blue-100")}>
+                                                                {isApproved && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                                                                {isRejected && <XCircle className="h-3 w-3 mr-1" />}
+                                                                {isPending && <Clock className="h-3 w-3 mr-1" />}
+                                                                {leave.status}
+                                                            </Badge>
+                                                            <p className="text-[9px] text-slate-300 mt-2 font-mono font-black tracking-tighter uppercase whitespace-nowrap">ID: {leave.requestId?.slice(-8).toUpperCase() || 'EXTERNAL'}</p>
                                                         </div>
                                                     </div>
+
+                                                    {/* Reason preview */}
+                                                    {leave.reason && (
+                                                        <p className="text-[11px] text-slate-500 bg-white/60 rounded-xl px-4 py-2.5 border border-slate-100/50 mb-3 line-clamp-2">{leave.reason}</p>
+                                                    )}
+
+                                                    {/* Teacher Response Banner */}
+                                                    {!isPending && (
+                                                        <div className={cn(
+                                                            "flex items-center gap-3 px-5 py-3 rounded-2xl mt-2 border",
+                                                            isApproved
+                                                                ? "bg-emerald-50 border-emerald-100"
+                                                                : "bg-rose-50 border-rose-100"
+                                                        )}>
+                                                            <div className={cn(
+                                                                "h-8 w-8 rounded-xl flex items-center justify-center shrink-0",
+                                                                isApproved ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"
+                                                            )}>
+                                                                {isApproved ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className={cn("text-[11px] font-black uppercase tracking-widest",
+                                                                    isApproved ? "text-emerald-700" : "text-rose-700"
+                                                                )}>
+                                                                    {isApproved ? "✅ Approved by Faculty" : "❌ Rejected by Faculty"}
+                                                                </p>
+                                                                <p className="text-[10px] text-slate-400 mt-0.5">
+                                                                    Updated: {formatLeaveDate(leave.updatedAt || leave.appliedOn)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {isPending && (
+                                                        <div className="flex items-center gap-3 px-5 py-3 rounded-2xl mt-2 bg-amber-50/50 border border-amber-100/50">
+                                                            <div className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0 bg-amber-100 text-amber-600">
+                                                                <Clock className="h-4 w-4" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[11px] font-black text-amber-700 uppercase tracking-widest">⏳ Awaiting Faculty Response</p>
+                                                                <p className="text-[10px] text-slate-400 mt-0.5">
+                                                                    Submitted: {formatLeaveDate(leave.appliedOn || leave.createdAt)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="text-right">
-                                                    <Badge className={cn("text-[9px] font-black h-7 px-4 rounded-full uppercase tracking-widest border shadow-sm",
-                                                        leave.status === 'approved' ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                                            leave.status === 'rejected' ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                                                "bg-blue-50 text-blue-600 border-blue-100")}>
-                                                        {leave.status}
-                                                    </Badge>
-                                                    <p className="text-[9px] text-slate-300 mt-2 font-mono font-black tracking-tighter uppercase whitespace-nowrap">ID: {leave.requestId?.slice(-8).toUpperCase() || 'EXTERNAL'}</p>
-                                                </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <div className="py-24 text-center border-2 border-dashed border-slate-100 rounded-[2.5rem] bg-slate-50/50">
                                             <div className="h-16 w-16 bg-white rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">

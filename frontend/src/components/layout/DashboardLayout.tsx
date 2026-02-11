@@ -10,6 +10,7 @@ import {
     Settings,
     LogOut,
     FileText,
+    Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -47,6 +48,11 @@ export const DashboardLayout = () => {
             path: "/students",
             icon: Users,
             label: "Student Records",
+        },
+        {
+            path: "/leave-requests",
+            icon: Mail,
+            label: "Leave Requests",
         },
         {
             path: "/settings",

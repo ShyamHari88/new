@@ -42,7 +42,7 @@ export default function Students() {
   const [departmentFilter, setDepartmentFilter] = useState<string>('1');
   const [yearFilter, setYearFilter] = useState<string>('1');
   const [sectionFilter, setSectionFilter] = useState<string>('C');
-  const [semesterFilter, setSemesterFilter] = useState<string>('all');
+
   const [searchQuery, setSearchQuery] = useState('');
   const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'above75' | 'below50'>('all');
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +130,7 @@ export default function Students() {
   const [studentPassword, setStudentPassword] = useState('');
   const [studentDept, setStudentDept] = useState(departmentFilter);
   const [studentYear, setStudentYear] = useState(yearFilter);
+
   const [studentSection, setStudentSection] = useState(sectionFilter);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -238,7 +239,7 @@ export default function Students() {
         departmentId: studentDept,
         year: parseInt(studentYear),
         section: studentSection,
-        currentSemester: 1,
+        currentSemester: (parseInt(studentYear) * 2) - 1 as any,
         password: studentPassword, // Include password for MongoDB
       };
 
@@ -256,6 +257,7 @@ export default function Students() {
         departmentId: studentDept,
         year: parseInt(studentYear),
         section: studentSection,
+        currentSemester: (parseInt(studentYear) * 2) - 1 as any,
       });
       toast.success('Student updated successfully');
     }
@@ -347,7 +349,7 @@ export default function Students() {
           dept?.code || student.departmentId,
           student.year,
           student.section,
-          student.currentSemester || '-',
+          `Sem ${(student.year * 2) - 1}-${student.year * 2}`,
           student.totalClasses,
           student.present,
           student.absent,
@@ -370,8 +372,7 @@ export default function Students() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      const semesterText = semesterFilter === 'all' ? 'AllSem' : `Sem${semesterFilter}`;
-      link.download = `students_${selectedDept?.code}_Y${yearFilter}_${sectionFilter}_${semesterText}_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `students_${selectedDept?.code}_Y${yearFilter}_${sectionFilter}_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
       URL.revokeObjectURL(url);
       toast.success('Excel file downloaded successfully!');
@@ -413,7 +414,7 @@ export default function Students() {
         <body>
           <div class="header-info">
             <h1>Student Records Report</h1>
-            <p><strong>Department:</strong> ${selectedDept?.name} | <strong>Year:</strong> ${yearFilter} | <strong>Section:</strong> ${sectionFilter} | <strong>Semester:</strong> ${semesterFilter === 'all' ? 'All' : semesterFilter}</p>
+            <p><strong>Department:</strong> ${selectedDept?.name} | <strong>Year:</strong> ${yearFilter} | <strong>Section:</strong> ${sectionFilter}</p>
             <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
           </div>
           <table>
@@ -487,7 +488,6 @@ export default function Students() {
     if (departmentFilter && student.departmentId !== departmentFilter) return false;
     if (yearFilter && student.year !== parseInt(yearFilter)) return false;
     if (sectionFilter && student.section !== sectionFilter) return false;
-    if (semesterFilter && semesterFilter !== 'all' && student.currentSemester !== parseInt(semesterFilter)) return false;
 
     if (searchQuery && !student.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
       !student.rollNumber.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -665,7 +665,12 @@ export default function Students() {
                   <Label htmlFor="year" className="text-right">
                     Year
                   </Label>
-                  <Select value={studentYear} onValueChange={setStudentYear}>
+                  <Select
+                    value={studentYear}
+                    onValueChange={(value) => {
+                      setStudentYear(value);
+                    }}
+                  >
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
@@ -757,22 +762,7 @@ export default function Students() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={semesterFilter} onValueChange={setSemesterFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Semester" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Semesters</SelectItem>
-                <SelectItem value="1">Semester 1</SelectItem>
-                <SelectItem value="2">Semester 2</SelectItem>
-                <SelectItem value="3">Semester 3</SelectItem>
-                <SelectItem value="4">Semester 4</SelectItem>
-                <SelectItem value="5">Semester 5</SelectItem>
-                <SelectItem value="6">Semester 6</SelectItem>
-                <SelectItem value="7">Semester 7</SelectItem>
-                <SelectItem value="8">Semester 8</SelectItem>
-              </SelectContent>
-            </Select>
+
           </div>
         </CardContent>
       </Card>
@@ -841,7 +831,7 @@ export default function Students() {
       <Card className="card-elevated">
         <CardHeader>
           <CardTitle className="font-display">
-            {selectedDept?.code} – Year {yearFilter} – Section {sectionFilter} {semesterFilter !== 'all' && `– Semester ${semesterFilter}`}
+            {selectedDept?.code} – Year {yearFilter} – Section {sectionFilter}
           </CardTitle>
           <CardDescription>
             {attendanceFilter === 'all'

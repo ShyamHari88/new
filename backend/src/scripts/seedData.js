@@ -424,7 +424,7 @@ async function insertSampleData() {
     try {
         console.log('🔌 Connecting to MongoDB...');
         await mongoose.connect(MONGODB_URI);
-        console.log('✅ Connected to MongoDB Atlas');
+        console.log(`✅ Connected to MongoDB: ${mongoose.connection.host}`);
 
         // Hash passwords for users
         console.log('🔐 Hashing passwords...');

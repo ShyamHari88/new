@@ -55,7 +55,6 @@ export const authService = {
 
             return userData;
         } catch (error: any) {
-        } catch (error: any) {
             const serverMessage = error.response?.data?.message;
             const detailedError = error.response?.data?.detailedError;
 

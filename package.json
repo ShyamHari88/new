@@ -1,0 +1,13 @@
+{
+    "name": "class-connect-root",
+    "version": "1.0.0",
+    "description": "Root script to run both backend and frontend",
+    "scripts": {
+        "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+        "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\" --kill-others-on-fail --prefix-colors \"magenta,blue\"",
+        "seed": "cd backend && npm run seed"
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}

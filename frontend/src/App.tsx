@@ -19,6 +19,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentAttendanceHistory from "./pages/StudentAttendanceHistory";
 import SubjectsPage from "./pages/SubjectsPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import LeaveRequests from "./pages/LeaveRequests";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/history" element={<History />} />
             <Route path="/students" element={<Students />} />
+            <Route path="/leave-requests" element={<LeaveRequests />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 

@@ -105,7 +105,7 @@ export function NotificationBell() {
                             </div>
                             <div className="divide-y divide-amber-100/30">
                                 {pendingRequests.map((request) => (
-                                    <div key={request.requestId} className="p-4 hover:bg-amber-50/50 transition-colors">
+                                    <div key={request.requestId || request._id} className="p-4 hover:bg-amber-50/50 transition-colors">
                                         <div className="flex items-start justify-between gap-3 mb-2">
                                             <div className="flex items-center gap-3">
                                                 <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center text-xs font-bold", request.type === 'On-Duty' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600')}>
@@ -125,10 +125,10 @@ export function NotificationBell() {
                                             {request.reason}
                                         </p>
                                         <div className="flex gap-2 mt-3">
-                                            <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8 text-[11px]" onClick={() => handleUpdateLeaveStatus(request.requestId, 'approved')}>
+                                            <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8 text-[11px]" onClick={() => handleUpdateLeaveStatus(request.requestId || request._id, 'approved')}>
                                                 APPROVE
                                             </Button>
-                                            <Button size="sm" variant="outline" className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 font-bold h-8 text-[11px]" onClick={() => handleUpdateLeaveStatus(request.requestId, 'rejected')}>
+                                            <Button size="sm" variant="outline" className="flex-1 border-rose-200 text-rose-600 hover:bg-rose-50 font-bold h-8 text-[11px]" onClick={() => handleUpdateLeaveStatus(request.requestId || request._id, 'rejected')}>
                                                 REJECT
                                             </Button>
                                         </div>

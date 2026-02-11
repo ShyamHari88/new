@@ -21,8 +21,7 @@ export default function StudentSignup() {
         confirmPassword: '',
         departmentId: '1',
         year: 1,
-        section: 'C',
-        currentSemester: 1
+        section: 'C'
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +60,7 @@ export default function StudentSignup() {
                 departmentId: formData.departmentId,
                 year: formData.year,
                 section: formData.section,
-                currentSemester: formData.currentSemester
+                currentSemester: (formData.year * 2) - 1
             });
 
             toast.success('Account created successfully!');
@@ -148,7 +147,16 @@ export default function StudentSignup() {
 
                             <div className="space-y-2">
                                 <Label htmlFor="year">Year</Label>
-                                <Select value={formData.year.toString()} onValueChange={(value) => setFormData({ ...formData, year: parseInt(value) })}>
+                                <Select
+                                    value={formData.year.toString()}
+                                    onValueChange={(value) => {
+                                        const newYear = parseInt(value);
+                                        setFormData({
+                                            ...formData,
+                                            year: newYear
+                                        });
+                                    }}
+                                >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
@@ -162,6 +170,8 @@ export default function StudentSignup() {
                                 </Select>
                             </div>
                         </div>
+
+
 
                         <div className="space-y-2">
                             <Label htmlFor="section">Section</Label>

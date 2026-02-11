@@ -40,15 +40,46 @@ export const updateLeaveStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        const leave = await LeaveRequest.findOneAndUpdate(
+        console.log(`[LEAVE UPDATE] Attempting to update leave: id=${id}, status=${status}`);
+
+        // Try finding by requestId first
+        let leave = await LeaveRequest.findOneAndUpdate(
             { requestId: id },
             { status },
             { new: true }
         );
 
+        // If not found by requestId, try by MongoDB _id
         if (!leave) {
+            console.log(`[LEAVE UPDATE] Not found by requestId, trying _id...`);
+            try {
+                leave = await LeaveRequest.findByIdAndUpdate(
+                    id,
+                    { status },
+                    { new: true }
+                );
+            } catch (idErr) {
+                console.log(`[LEAVE UPDATE] _id lookup also failed:`, idErr.message);
+            }
+        }
+
+        // Last resort: try raw collection update
+        if (!leave) {
+            console.log(`[LEAVE UPDATE] Trying raw collection update...`);
+            const rawResult = await LeaveRequest.collection.findOneAndUpdate(
+                { requestId: id },
+                { $set: { status } },
+                { returnDocument: 'after' }
+            );
+            leave = rawResult?.value || rawResult;
+        }
+
+        if (!leave) {
+            console.log(`[LEAVE UPDATE] Leave request NOT FOUND for id: ${id}`);
             return res.status(404).json({ message: 'Leave request not found' });
         }
+
+        console.log(`[LEAVE UPDATE] ✅ Successfully updated leave ${id} to status: ${status}`);
 
         // If approved and type is On-Duty, automatically mark attendance as OD
         if (status === 'approved' && leave.type === 'On-Duty') {
@@ -103,6 +134,7 @@ export const updateLeaveStatus = async (req, res) => {
             leave
         });
     } catch (error) {
+        console.error(`[LEAVE UPDATE] Error:`, error.message);
         res.status(500).json({ message: 'Error updating leave status', error: error.message });
     }
 };
