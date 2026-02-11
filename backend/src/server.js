@@ -1,6 +1,11 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
+
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import mongoose from 'mongoose'; // Add this import
 import connectDB from './config/database.js';
 import authRoutes from './routes/auth.js';
@@ -12,9 +17,6 @@ import leaveRoutes from './routes/leaves.js';
 import teacherRoutes from './routes/teachers.js';
 import timetableRoutes from './routes/timetable.js';
 import notificationRoutes from './routes/notifications.js';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 

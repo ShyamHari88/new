@@ -62,9 +62,13 @@ export const studentSignup = async (req, res) => {
 
         console.log(`[AUTH] Creating student record for ${rollNumber}`);
         // Create student record
+        console.log("EMAIL CHECK 👉", email, req.body.email);
+
         await Student.create({
             studentId,
             name,
+            email: req.body.email,
+
             rollNumber,
             departmentId,
             year: parseInt(year),
