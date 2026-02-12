@@ -1,5 +1,5 @@
 
-import { Bell, CheckCircle2, XCircle, Clock, Info, AlertTriangle, MessageSquare } from 'lucide-react';
+import { Bell, CheckCircle2, XCircle, Clock, Info, AlertTriangle, MessageSquare, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -149,11 +149,13 @@ export function NotificationBell() {
                                             "h-9 w-9 rounded-xl flex items-center justify-center shrink-0",
                                             note.type === 'attendance_alert' ? "bg-rose-100 text-rose-600" :
                                                 note.type === 'leave_update' ? "bg-emerald-100 text-emerald-600" :
-                                                    "bg-blue-100 text-blue-600"
+                                                    note.type === 'mark_alert' ? "bg-indigo-100 text-indigo-600" :
+                                                        "bg-blue-100 text-blue-600"
                                         )}>
                                             {note.type === 'attendance_alert' ? <AlertTriangle className="h-4 w-4" /> :
                                                 note.type === 'leave_update' ? <CheckCircle2 className="h-4 w-4" /> :
-                                                    <Info className="h-4 w-4" />}
+                                                    note.type === 'mark_alert' ? <FileText className="h-4 w-4" /> :
+                                                        <Info className="h-4 w-4" />}
                                         </div>
                                         <div className="flex-1 min-w-0 pr-6">
                                             <div className="flex items-center justify-between gap-2 mb-0.5">

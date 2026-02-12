@@ -1,4 +1,6 @@
 import Marks from '../models/Marks.js';
+import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 
 // Get marks for a student
 export const getStudentMarks = async (req, res) => {
@@ -34,6 +36,38 @@ export const addMarks = async (req, res) => {
 
         const createdMarks = await Marks.insertMany(marks);
 
+        // Notify students
+        try {
+            // Get unique student IDs from the uploaded marks
+            const studentIds = [...new Set(marks.map(m => m.studentId))];
+
+            // Find users corresponding to these student IDs
+            const users = await User.find({ studentId: { $in: studentIds } });
+
+            // Create notifications
+            const notifications = [];
+
+            for (const mark of marks) {
+                const user = users.find(u => u.studentId === mark.studentId);
+                if (user) {
+                    notifications.push({
+                        userId: user.userId,
+                        title: 'New Marks Uploaded',
+                        message: `Marks for ${mark.subjectName} (${mark.assessmentType}) have been uploaded.`,
+                        type: 'mark_alert',
+                        senderId: req.user?.userId || 'system'
+                    });
+                }
+            }
+
+            if (notifications.length > 0) {
+                await Notification.insertMany(notifications);
+            }
+        } catch (notifError) {
+            console.error('Error creating notifications for marks:', notifError);
+            // Don't fail the request if notifications fail
+        }
+
         res.status(201).json({
             success: true,
             message: 'Marks added successfully',
@@ -65,6 +99,7 @@ export const getAllMarks = async (req, res) => {
         res.status(500).json({ message: 'Error fetching marks', error: error.message });
     }
 };
+
 // Update a mark
 export const updateMark = async (req, res) => {
     try {
@@ -79,6 +114,22 @@ export const updateMark = async (req, res) => {
 
         if (!updatedMark) {
             return res.status(404).json({ message: 'Mark not found' });
+        }
+
+        // Notify student
+        try {
+            const user = await User.findOne({ studentId: updatedMark.studentId });
+            if (user) {
+                await Notification.create({
+                    userId: user.userId,
+                    title: 'Marks Updated',
+                    message: `Your marks for ${updatedMark.subjectName} (${updatedMark.assessmentType}) have been updated to ${marks}.`,
+                    type: 'mark_alert',
+                    senderId: req.user?.userId || 'system'
+                });
+            }
+        } catch (notifError) {
+            console.error('Error creating notification for mark update:', notifError);
         }
 
         res.json({

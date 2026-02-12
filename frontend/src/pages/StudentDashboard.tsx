@@ -412,7 +412,7 @@ export default function StudentDashboard() {
                             <CardHeader className="p-8 pb-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <CardTitle className="text-xl font-black font-display text-slate-900 tracking-tight">Attendance Matrix</CardTitle>
+                                        <CardTitle className="text-xl font-black font-display text-slate-900 tracking-tight">Attendance</CardTitle>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Subject-wise performance</p>
                                     </div>
                                     <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">

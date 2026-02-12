@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { departments, years, sections } from '@/data/mockData';
+import { departments, years, sections, getSemestersForYear } from '@/data/mockData';
 import { dataService } from '@/services/data';
 import { AssessmentType, SubjectMark, Subject } from '@/types/attendance';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,6 +21,7 @@ const assessmentTypes: { value: AssessmentType; label: string }[] = [
 export function MarksUpload() {
     const [departmentFilter, setDepartmentFilter] = useState<string>('1');
     const [yearFilter, setYearFilter] = useState<string>('1');
+    const [semesterFilter, setSemesterFilter] = useState<string>('1');
     const [sectionFilter, setSectionFilter] = useState<string>('C');
     const [subject, setSubject] = useState<string>('');
     const [assessmentType, setAssessmentType] = useState<AssessmentType>('CIA_T1');
@@ -39,9 +40,18 @@ export function MarksUpload() {
         loadSubjects();
     }, []);
 
+    // Update semester when year changes
+    useEffect(() => {
+        const sems = getSemestersForYear(parseInt(yearFilter));
+        if (sems.length > 0) {
+            setSemesterFilter(sems[0].value.toString());
+        }
+    }, [yearFilter]);
+
     const filteredSubjects = availableSubjects.filter(s =>
         s.departmentId === departmentFilter &&
-        s.year === parseInt(yearFilter)
+        s.year === parseInt(yearFilter) &&
+        s.semester === parseInt(semesterFilter)
     );
 
     const handleLoadStudents = async () => {
@@ -123,6 +133,8 @@ export function MarksUpload() {
         }
     };
 
+    const availableSemesters = getSemestersForYear(parseInt(yearFilter));
+
     return (
         <Card className="card-elevated">
             <CardHeader>
@@ -153,6 +165,19 @@ export function MarksUpload() {
                             {years.map((y) => (
                                 <SelectItem key={y.value} value={y.value.toString()}>
                                     {y.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={semesterFilter} onValueChange={setSemesterFilter}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Semester" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availableSemesters.map((s) => (
+                                <SelectItem key={s.value} value={s.value.toString()}>
+                                    {s.label}
                                 </SelectItem>
                             ))}
                         </SelectContent>
