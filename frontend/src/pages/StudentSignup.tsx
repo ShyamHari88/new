@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { authService } from '@/services/auth';
 import { departments, years, sections } from '@/data/mockData';
 import { GraduationCap, ArrowLeft } from 'lucide-react';
+import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 
 export default function StudentSignup() {
     const navigate = useNavigate();
@@ -44,12 +40,6 @@ export default function StudentSignup() {
         }
 
         setLoading(true);
-        const yearMap: Record<string, number> = {
-            "First Year": 1,
-            "Second Year": 2,
-            "Third Year": 3,
-            "Final Year": 4,
-        };
 
         try {
             await authService.studentSignup({
@@ -73,159 +63,156 @@ export default function StudentSignup() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
-                    <div className="flex items-center justify-between">
-                        <Link to="/login">
-                            <Button variant="ghost" size="sm">
-                                <ArrowLeft className="h-4 w-4 mr-2" />
-                                Back to Login
-                            </Button>
-                        </Link>
-                    </div>
-                    <div className="flex items-center justify-center mb-4">
-                        <GraduationCap className="h-12 w-12 text-primary" />
-                    </div>
-                    <CardTitle className="text-2xl text-center">Student Sign Up</CardTitle>
-                    <CardDescription className="text-center">
-                        Create your student account
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Full Name *</Label>
-                            <Input
-                                id="name"
-                                placeholder="John Doe"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                required
-                            />
-                        </div>
+        <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
+            <Container>
+                <Row className="justify-content-center">
+                    <Col md={8} lg={6} xl={5}>
+                        <Card className="shadow-lg border-0 rounded-lg">
+                            <Card.Header className="bg-white border-0 pt-4 px-4">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <Link to="/login" className="btn btn-link text-decoration-none p-0 d-flex align-items-center text-muted">
+                                        <ArrowLeft className="me-2" size={16} />
+                                        Back to Login
+                                    </Link>
+                                </div>
+                                <div className="text-center mb-4">
+                                    <div className="d-flex justify-content-center mb-3">
+                                        <div className="bg-primary bg-opacity-10 p-3 rounded-circle">
+                                            <GraduationCap className="text-primary" size={48} />
+                                        </div>
+                                    </div>
+                                    <h2 className="text-center fw-bold text-dark">Student Sign Up</h2>
+                                    <p className="text-muted text-center">Create your student account</p>
+                                </div>
+                            </Card.Header>
+                            <Card.Body className="px-4 pb-4">
+                                <Form onSubmit={handleSubmit}>
+                                    <Form.Group className="mb-3" controlId="name">
+                                        <Form.Label>Full Name *</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="John Doe"
+                                            value={formData.name}
+                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            required
+                                        />
+                                    </Form.Group>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email *</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="john@student.com"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                required
-                            />
-                        </div>
+                                    <Form.Group className="mb-3" controlId="email">
+                                        <Form.Label>Email *</Form.Label>
+                                        <Form.Control
+                                            type="email"
+                                            placeholder="john@student.com"
+                                            value={formData.email}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                            required
+                                        />
+                                    </Form.Group>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="rollNumber">Roll Number *</Label>
-                            <Input
-                                id="rollNumber"
-                                placeholder="23IT151"
-                                value={formData.rollNumber}
-                                onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
-                                required
-                            />
-                        </div>
+                                    <Form.Group className="mb-3" controlId="rollNumber">
+                                        <Form.Label>Roll Number *</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="23IT151"
+                                            value={formData.rollNumber}
+                                            onChange={(e) => setFormData({ ...formData, rollNumber: e.target.value })}
+                                            required
+                                        />
+                                    </Form.Group>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="department">Department</Label>
-                                <Select value={formData.departmentId} onValueChange={(value) => setFormData({ ...formData, departmentId: value })}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {departments.map((dept) => (
-                                            <SelectItem key={dept.id} value={dept.id}>
-                                                {dept.code}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                    <Row className="mb-3">
+                                        <Col xs={6}>
+                                            <Form.Group controlId="department">
+                                                <Form.Label>Department</Form.Label>
+                                                <Form.Select
+                                                    value={formData.departmentId}
+                                                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
+                                                >
+                                                    {departments.map((dept) => (
+                                                        <option key={dept.id} value={dept.id}>
+                                                            {dept.code}
+                                                        </option>
+                                                    ))}
+                                                </Form.Select>
+                                            </Form.Group>
+                                        </Col>
+                                        <Col xs={6}>
+                                            <Form.Group controlId="year">
+                                                <Form.Label>Year</Form.Label>
+                                                <Form.Select
+                                                    value={formData.year.toString()}
+                                                    onChange={(e) => {
+                                                        const newYear = parseInt(e.target.value);
+                                                        setFormData({
+                                                            ...formData,
+                                                            year: newYear
+                                                        });
+                                                    }}
+                                                >
+                                                    {years.map((y) => (
+                                                        <option key={y.value} value={y.value.toString()}>
+                                                            {y.label}
+                                                        </option>
+                                                    ))}
+                                                </Form.Select>
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="year">Year</Label>
-                                <Select
-                                    value={formData.year.toString()}
-                                    onValueChange={(value) => {
-                                        const newYear = parseInt(value);
-                                        setFormData({
-                                            ...formData,
-                                            year: newYear
-                                        });
-                                    }}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {years.map((y) => (
-                                            <SelectItem key={y.value} value={y.value.toString()}>
-                                                {y.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                                    <Form.Group className="mb-3" controlId="section">
+                                        <Form.Label>Section</Form.Label>
+                                        <Form.Select
+                                            value={formData.section}
+                                            onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                                        >
+                                            {sections.map((s) => (
+                                                <option key={s} value={s}>
+                                                    Section {s}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
 
+                                    <Form.Group className="mb-3" controlId="password">
+                                        <Form.Label>Password *</Form.Label>
+                                        <Form.Control
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={formData.password}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            required
+                                        />
+                                    </Form.Group>
 
+                                    <Form.Group className="mb-4" controlId="confirmPassword">
+                                        <Form.Label>Confirm Password *</Form.Label>
+                                        <Form.Control
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={formData.confirmPassword}
+                                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                            required
+                                        />
+                                    </Form.Group>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="section">Section</Label>
-                            <Select value={formData.section} onValueChange={(value) => setFormData({ ...formData, section: value })}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {sections.map((s) => (
-                                        <SelectItem key={s} value={s}>
-                                            Section {s}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                    <Button variant="primary" type="submit" className="w-100 py-2 fw-bold" disabled={loading}>
+                                        {loading ? 'Creating Account...' : 'Sign Up'}
+                                    </Button>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password *</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                            <Input
-                                id="confirmPassword"
-                                type="password"
-                                placeholder="••••••••"
-                                value={formData.confirmPassword}
-                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                required
-                            />
-                        </div>
-
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Creating Account...' : 'Sign Up'}
-                        </Button>
-
-                        <p className="text-center text-sm text-muted-foreground">
-                            Already have an account?{' '}
-                            <Link to="/login" className="text-primary hover:underline">
-                                Login here
-                            </Link>
-                        </p>
-                    </form>
-                </CardContent>
-            </Card>
+                                    <div className="text-center mt-3">
+                                        <span className="text-muted small">
+                                            Already have an account?{' '}
+                                            <Link to="/login" className="text-primary text-decoration-none fw-semibold">
+                                                Login here
+                                            </Link>
+                                        </span>
+                                    </div>
+                                </Form>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
         </div>
     );
 }
