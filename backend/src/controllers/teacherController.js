@@ -52,3 +52,45 @@ export const deleteTeacher = async (req, res) => {
         res.status(500).json({ message: 'Error deleting teacher', error: error.message });
     }
 };
+// Create new teacher (Admin only)
+export const createTeacher = async (req, res) => {
+    try {
+        const { name, email, teacherId, password, departmentId } = req.body;
+
+        // Check if teacher already exists
+        const existingTeacher = await User.findOne({
+            $or: [{ email }, { teacherId }]
+        });
+
+        if (existingTeacher) {
+            return res.status(400).json({ message: 'Teacher with this email or ID already exists' });
+        }
+
+        // Create new user with teacher role
+        const teacher = await User.create({
+            userId: teacherId, // Using teacherId as userId for consistency
+            name,
+            email,
+            password, // Will be hashed by pre-save hook
+            role: 'teacher',
+            teacherId,
+            departmentId,
+            isFirstLogin: true
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Teacher created successfully',
+            teacher: {
+                id: teacher.userId,
+                name: teacher.name,
+                email: teacher.email,
+                teacherId: teacher.teacherId,
+                departmentId: teacher.departmentId
+            }
+        });
+    } catch (error) {
+        console.error('Create teacher error:', error);
+        res.status(500).json({ message: 'Error creating teacher', error: error.message });
+    }
+};

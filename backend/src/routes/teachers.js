@@ -1,6 +1,6 @@
 
 import express from 'express';
-import { getAllTeachers, updateTeacher, deleteTeacher } from '../controllers/teacherController.js';
+import { getAllTeachers, updateTeacher, deleteTeacher, createTeacher } from '../controllers/teacherController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -12,6 +12,8 @@ router.use(authenticate);
 router.get('/', authorize('admin'), getAllTeachers);
 
 // Update/Delete teacher (Admin only)
+router.post('/', authorize('admin'), createTeacher);
+
 router.put('/:id', authorize('admin'), updateTeacher);
 router.delete('/:id', authorize('admin'), deleteTeacher);
 

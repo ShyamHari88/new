@@ -7,7 +7,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import StudentSignup from "./pages/StudentSignup";
-import TeacherSignup from "./pages/TeacherSignup";
+
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import History from "./pages/History";
@@ -34,7 +34,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/student-signup" element={<StudentSignup />} />
-          <Route path="/teacher-signup" element={<TeacherSignup />} />
+
 
           {/* Teacher Routes */}
           <Route element={

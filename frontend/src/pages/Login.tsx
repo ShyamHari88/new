@@ -164,10 +164,6 @@ export default function Login() {
                       <Link to="/student-signup" className="text-primary hover:underline font-medium">
                         Sign up as Student
                       </Link>
-                    ) : activeTab === 'teacher' ? (
-                      <Link to="/teacher-signup" className="text-primary hover:underline font-medium">
-                        Sign up as Teacher
-                      </Link>
                     ) : null}
                   </div>
                 </form>

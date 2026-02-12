@@ -68,6 +68,18 @@ export const dataService = {
         }
     },
 
+    addTeacher: async (data: any) => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.post('/teachers', data);
+            return response.data;
+        } catch (error: any) {
+            console.error('Add teacher error:', error);
+            throw new Error(error.response?.data?.message || 'Failed to add teacher');
+        }
+    },
+
+
     updateTeacher: async (teacherId: string, updates: any) => {
         try {
             const { default: api } = await import('./api');

@@ -235,8 +235,8 @@ export default function AdminDashboard() {
     const handleAddTeacher = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // Using authService for teacher signup flow
-            await authService.teacherSignup({
+            // Using dataService to create teacher without logging them in
+            await dataService.addTeacher({
                 name: newTeacher.name,
                 email: newTeacher.email,
                 teacherId: newTeacher.teacherId,
