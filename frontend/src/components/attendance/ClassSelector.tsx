@@ -7,6 +7,7 @@ import { departments, years, sections, semesters, getSemestersForYear } from '@/
 import { ClassInfo, Subject, Semester } from '@/types/attendance';
 import { dataService } from '@/services/data';
 import { ArrowRight, Building2, Calendar, GraduationCap, BookOpen, Clock } from 'lucide-react';
+import { authService } from '@/services/auth';
 
 interface ClassSelectorProps {
   onClassSelect: (classInfo: ClassInfo, subject: string, date: string, period: string) => void;
@@ -32,10 +33,14 @@ export function ClassSelector({ onClassSelect }: ClassSelectorProps) {
   useEffect(() => {
     const loadSubjects = async () => {
       if (departmentId && year && semester) {
+        const user = authService.getCurrentUser();
+        const teacherId = user?.role === 'teacher' ? user.teacherId : undefined;
+
         const subjects = await dataService.getSubjectsByFilter(
           departmentId,
           parseInt(year),
-          parseInt(semester) as Semester
+          parseInt(semester) as Semester,
+          teacherId
         );
         setAvailableSubjects(subjects);
         setSubjectId(''); // Reset subject selection when filters change

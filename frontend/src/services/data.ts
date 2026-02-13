@@ -101,6 +101,29 @@ export const dataService = {
         }
     },
 
+    // --- Advisors ---
+    getAllAdvisors: async (): Promise<any[]> => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.get('/advisor/all');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching advisors:', error);
+            return [];
+        }
+    },
+
+    addAdvisor: async (data: any) => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.post('/advisor/create', data);
+            return response.data;
+        } catch (error: any) {
+            console.error('Add advisor error:', error);
+            throw new Error(error.response?.data?.message || 'Failed to add advisor');
+        }
+    },
+
     // --- Students ---
     syncStudentsFromBackend: async (): Promise<Student[]> => {
         try {
@@ -295,12 +318,13 @@ export const dataService = {
         }
     },
 
-    getSubjectsByFilter: async (departmentId: string, year: number, semester?: Semester): Promise<Subject[]> => {
+    getSubjectsByFilter: async (departmentId: string, year: number, semester?: Semester, teacherId?: string): Promise<Subject[]> => {
         const all = await dataService.getAllSubjects();
         return all.filter(s =>
             s.departmentId === departmentId &&
             s.year === year &&
-            (semester === undefined || s.semester === semester)
+            (semester === undefined || s.semester === semester) &&
+            (!teacherId || s.teacherId === teacherId)
         );
     },
 

@@ -2,7 +2,7 @@
 import api from './api';
 import { Student } from '@/types/attendance';
 
-export type Role = 'teacher' | 'student' | 'admin';
+export type Role = 'teacher' | 'student' | 'admin' | 'advisor';
 
 export interface User {
     id: string;
@@ -12,6 +12,7 @@ export interface User {
     studentId?: string;
     rollNumber?: string;
     teacherId?: string;
+    advisorId?: string;
     departmentId?: string;
     year?: number;
     section?: string;
@@ -176,6 +177,34 @@ export const authService = {
         } catch (error: any) {
             const message = error.response?.data?.message || error.message || 'Login failed';
             console.error('Admin Login Error:', message, error);
+            throw new Error(message);
+        }
+    },
+
+    // Advisor Login
+    advisorLogin: async (advisorId: string, password: string): Promise<User> => {
+        try {
+            const response = await api.post('/auth/advisor/login', { advisorId, password });
+            const { token, user } = response.data;
+
+            // Store token and user
+            localStorage.setItem('token', token);
+            const userData: User = {
+                id: user.userId,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                advisorId: user.advisorId,
+                departmentId: user.departmentId,
+                section: user.section,
+                isFirstLogin: user.isFirstLogin
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+
+            return userData;
+        } catch (error: any) {
+            const message = error.response?.data?.message || error.message || 'Login failed';
+            console.error('Advisor Login Error:', message, error);
             throw new Error(message);
         }
     },

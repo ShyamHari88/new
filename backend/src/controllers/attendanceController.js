@@ -57,8 +57,10 @@ export const addAttendanceRecords = async (req, res) => {
             return res.status(400).json({ message: 'Invalid records format' });
         }
 
-        // Add topicCovered to each record
-        const recordsToSave = records.map(r => ({ ...r, topicCovered }));
+        const teacherId = req.user.role === 'teacher' ? req.user.userId : req.body.teacherId;
+
+        // Add topicCovered and teacherId to each record
+        const recordsToSave = records.map(r => ({ ...r, topicCovered, teacherId }));
 
         const createdRecords = await AttendanceRecord.insertMany(recordsToSave);
 
@@ -128,6 +130,11 @@ export const getAllAttendance = async (req, res) => {
         if (section) filter.section = section;
         if (subjectName) filter.subjectName = subjectName;
 
+        // If teacher, only show their own records
+        if (req.user.role === 'teacher') {
+            filter.teacherId = req.user.userId;
+        }
+
         const records = await AttendanceRecord.find(filter).sort({ date: -1 });
 
         res.json({ success: true, records });
@@ -140,7 +147,12 @@ export const getAllAttendance = async (req, res) => {
 // Get all attendance sessions (grouped by date, subject, period, class)
 export const getAllSessions = async (req, res) => {
     try {
-        const records = await AttendanceRecord.find().sort({ date: -1 });
+        const filter = {};
+        if (req.user.role === 'teacher') {
+            filter.teacherId = req.user.userId;
+        }
+
+        const records = await AttendanceRecord.find(filter).sort({ date: -1 });
 
         // Group records into sessions
         const sessionsMap = new Map();

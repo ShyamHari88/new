@@ -4,7 +4,13 @@ import crypto from 'crypto';
 // Get all subjects
 export const getAllSubjects = async (req, res) => {
     try {
-        const { departmentId, year, semester, teacherId } = req.query;
+        const { departmentId, year, semester } = req.query;
+        let teacherId = req.query.teacherId;
+
+        // If teacher, force filter by their ID
+        if (req.user.role === 'teacher') {
+            teacherId = req.user.userId;
+        }
 
         const filter = {};
         if (departmentId) filter.departmentId = departmentId;

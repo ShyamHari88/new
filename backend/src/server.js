@@ -4,6 +4,7 @@ dotenv.config();
 
 
 
+import fs from 'fs';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose'; // Add this import
@@ -17,6 +18,7 @@ import leaveRoutes from './routes/leaves.js';
 import teacherRoutes from './routes/teachers.js';
 import timetableRoutes from './routes/timetable.js';
 import notificationRoutes from './routes/notifications.js';
+import advisorRoutes from './routes/advisor.js';
 
 const app = express();
 
@@ -53,6 +55,7 @@ app.use('/api/leaves', leaveRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/timetable', timetableRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/advisor', advisorRoutes);
 
 
 
@@ -119,18 +122,29 @@ app.get('/api', (req, res) => {
     });
 });
 
+// JSON Error Handler middleware
+app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        console.error('Bad JSON:', err.message);
+        return res.status(400).send({ status: 400, message: err.message }); // Bad request
+    }
+    next(err);
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
 
-    // Log globally to file
-    import('fs').then(fs => {
+    // Log globally to file using synchronous fs
+    try {
         fs.appendFileSync('server-error.log', `${new Date().toISOString()} - ${err.message}\n${err.stack}\n\n`);
-    });
+    } catch (e) {
+        console.error('Failed to write to log file', e);
+    }
 
     res.status(500).json({
         message: 'Something went wrong!',
-        error: err.message // Always show error message for now to help user debug
+        error: err.message
     });
 });
 

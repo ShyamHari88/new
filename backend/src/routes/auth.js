@@ -5,6 +5,7 @@ import {
     teacherSignup,
     teacherLogin,
     adminLogin,
+    advisorLogin,
     forgotPassword,
     resetPassword,
     getCurrentUser,
@@ -24,6 +25,9 @@ router.post('/teacher/login', teacherLogin);
 
 // Admin routes
 router.post('/admin/login', adminLogin);
+
+// Advisor routes
+router.post('/advisor/login', advisorLogin);
 
 // Password reset routes
 router.post('/forgot-password', forgotPassword);

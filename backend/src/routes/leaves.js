@@ -12,12 +12,12 @@ router.post('/', authorize('student'), applyLeave);
 // Get student's own leaves
 router.get('/student/:studentId', getStudentLeaves);
 
-// Get all leaves (Teachers/Admins)
-router.get('/all', authorize('teacher', 'admin'), getAllLeaves);
+// Get all leaves (Teachers/Admins/Advisors)
+router.get('/all', authorize('teacher', 'admin', 'advisor'), getAllLeaves);
 
-// Update status (Teachers/Admins)
-// Update status (Teachers/Admins)
-router.put('/:id', authorize('teacher', 'admin'), updateLeaveStatus);
+// Update status (Teachers/Admins/Advisors)
+// Update status (Teachers/Admins/Advisors)
+router.put('/:id', authorize('teacher', 'admin', 'advisor'), updateLeaveStatus);
 
 // Upload attachments (Students)
 router.post('/:id/upload', authorize('student'), upload.array('files', 5), uploadAttachments);

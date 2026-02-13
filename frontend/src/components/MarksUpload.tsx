@@ -9,6 +9,7 @@ import { AssessmentType, SubjectMark, Subject } from '@/types/attendance';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { authService } from '@/services/auth';
 
 // Hardcoded assessment types
 const assessmentTypes: { value: AssessmentType; label: string }[] = [
@@ -32,8 +33,13 @@ export function MarksUpload() {
     const [isLoading, setIsLoading] = useState(false);
     const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
 
+    const user = authService.getCurrentUser();
+    const isTeacher = user?.role === 'teacher';
+    const teacherId = isTeacher ? (user.teacherId || user.id) : undefined;
+
     useEffect(() => {
         const loadSubjects = async () => {
+            // If teacher, can optimize but getAllSubjects is cached
             const subjects = await dataService.getAllSubjects();
             setAvailableSubjects(subjects);
         };
@@ -51,7 +57,8 @@ export function MarksUpload() {
     const filteredSubjects = availableSubjects.filter(s =>
         s.departmentId === departmentFilter &&
         s.year === parseInt(yearFilter) &&
-        s.semester === parseInt(semesterFilter)
+        s.semester === parseInt(semesterFilter) &&
+        (!teacherId || s.teacherId === teacherId)
     );
 
     const handleLoadStudents = async () => {
@@ -88,7 +95,7 @@ export function MarksUpload() {
     };
 
     const handleSaveMarks = async () => {
-        const teacherId = localStorage.getItem('teacher_id') || 'teacher1';
+        const uploaderId = teacherId || 'admin';
         const now = new Date().toISOString();
         const date = new Date().toISOString().split('T')[0];
 
@@ -112,7 +119,7 @@ export function MarksUpload() {
                             marks,
                             maxMarks,
                             date,
-                            uploadedBy: teacherId,
+                            uploadedBy: uploaderId,
                             timestamp: now,
                         });
                     }

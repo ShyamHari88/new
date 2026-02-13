@@ -3,6 +3,7 @@ import LeaveRequest from '../models/LeaveRequest.js';
 import AttendanceRecord from '../models/AttendanceRecord.js';
 import Student from '../models/Student.js';
 import Notification from '../models/Notification.js';
+import User from '../models/User.js';
 import crypto from 'crypto';
 
 export const applyLeave = async (req, res) => {
@@ -30,9 +31,30 @@ export const getStudentLeaves = async (req, res) => {
 };
 
 export const getAllLeaves = async (req, res) => {
-    // Use raw collection to ensure we get attachments regardless of schema state
-    const leaves = await LeaveRequest.collection.find().sort({ appliedOn: -1 }).toArray();
-    res.json({ success: true, leaves });
+    try {
+        const user = req.user;
+        let query = {};
+
+        // If user is an advisor, only show leaves for their section
+        if (user.role === 'advisor') {
+            const advisor = await User.findOne({ userId: user.userId });
+            const studentsInSec = await Student.find({
+                departmentId: advisor.departmentId,
+                section: advisor.section
+            }).select('studentId');
+
+            const studentIds = studentsInSec.map(s => s.studentId);
+            query = { studentId: { $in: studentIds } };
+        }
+        // Admin and Teacher roles see all for now (as before)
+
+        // Use raw collection to ensure we get attachments regardless of schema state
+        const leaves = await LeaveRequest.collection.find(query).sort({ appliedOn: -1 }).toArray();
+        res.json({ success: true, leaves });
+    } catch (error) {
+        console.error('GetAllLeaves error:', error);
+        res.status(500).json({ message: 'Error fetching leave requests', error: error.message });
+    }
 };
 
 export const updateLeaveStatus = async (req, res) => {
@@ -77,6 +99,15 @@ export const updateLeaveStatus = async (req, res) => {
         if (!leave) {
             console.log(`[LEAVE UPDATE] Leave request NOT FOUND for id: ${id}`);
             return res.status(404).json({ message: 'Leave request not found' });
+        }
+
+        // Security check for Advisors: Must belong to their section
+        if (req.user.role === 'advisor') {
+            const advisor = await User.findOne({ userId: req.user.userId });
+            const student = await Student.findOne({ studentId: leave.studentId });
+            if (!student || student.departmentId !== advisor.departmentId || student.section !== advisor.section) {
+                return res.status(403).json({ message: 'Access denied: Student is not in your assigned section' });
+            }
         }
 
         console.log(`[LEAVE UPDATE] ✅ Successfully updated leave ${id} to status: ${status}`);

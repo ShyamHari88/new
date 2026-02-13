@@ -19,6 +19,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import StudentAttendanceHistory from "./pages/StudentAttendanceHistory";
 import SubjectsPage from "./pages/SubjectsPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdvisorDashboard from "./pages/AdvisorDashboard";
 import LeaveRequests from "./pages/LeaveRequests";
 import { RequireAuth } from "@/components/auth/RequireAuth";
 
@@ -47,8 +48,6 @@ const App = () => (
             <Route path="/marks" element={<Marks />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/history" element={<History />} />
-            <Route path="/students" element={<Students />} />
-            <Route path="/leave-requests" element={<LeaveRequests />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
 
@@ -84,6 +83,23 @@ const App = () => (
           <Route path="/admin/reports" element={
             <RequireAuth role="admin">
               <History />
+            </RequireAuth>
+          } />
+
+          {/* Advisor Routes */}
+          <Route path="/advisor/dashboard" element={
+            <RequireAuth role="advisor">
+              <AdvisorDashboard />
+            </RequireAuth>
+          } />
+          <Route path="/advisor/leave-requests" element={
+            <RequireAuth role="advisor">
+              <LeaveRequests />
+            </RequireAuth>
+          } />
+          <Route path="/advisor/students" element={
+            <RequireAuth role="advisor">
+              <Students />
             </RequireAuth>
           } />
 

@@ -45,16 +45,6 @@ export const DashboardLayout = () => {
             label: "Class History",
         },
         {
-            path: "/students",
-            icon: Users,
-            label: "Student Records",
-        },
-        {
-            path: "/leave-requests",
-            icon: Mail,
-            label: "Leave Requests",
-        },
-        {
             path: "/settings",
             icon: Settings,
             label: "Settings",

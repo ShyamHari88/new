@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { departments, years, sections } from '@/data/mockData';
-import { Search, Filter, User, TrendingUp, TrendingDown, Minus, Pencil, Trash2, AlertTriangle, RefreshCw, Upload, Download, FileUp } from 'lucide-react';
+import { Search, Filter, User, TrendingUp, TrendingDown, Minus, Pencil, Trash2, AlertTriangle, RefreshCw, Upload, Download, FileUp, ArrowLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { dataService } from '@/services/data';
 import { Student } from '@/types/attendance';
@@ -38,10 +38,17 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
+import { authService } from '@/services/auth';
+
 export default function Students() {
-  const [departmentFilter, setDepartmentFilter] = useState<string>('1');
-  const [yearFilter, setYearFilter] = useState<string>('1');
-  const [sectionFilter, setSectionFilter] = useState<string>('C');
+  const user = authService.getCurrentUser();
+  const isAdmin = user?.role === 'admin';
+  const isAdvisor = user?.role === 'advisor';
+  const canManage = isAdmin || isAdvisor;
+
+  const [departmentFilter, setDepartmentFilter] = useState<'all' | string>(user?.departmentId || '1');
+  const [yearFilter, setYearFilter] = useState<string>(user?.year?.toString() || '1');
+  const [sectionFilter, setSectionFilter] = useState<string>(user?.section || 'C');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [attendanceFilter, setAttendanceFilter] = useState<'all' | 'above75' | 'below50'>('all');
@@ -113,8 +120,13 @@ export default function Students() {
   useEffect(() => {
     if (location.state?.openAdd) {
       handleAddClick();
+    } else if (location.state?.editStudentId && students.length > 0) {
+      const studentToEdit = students.find(s => s.id === location.state.editStudentId || s.studentId === location.state.editStudentId);
+      if (studentToEdit) {
+        handleEditClick(studentToEdit);
+      }
     }
-  }, [location]);
+  }, [location, students]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
@@ -499,12 +511,23 @@ export default function Students() {
     if (attendanceFilter === 'below50' && student.percentage >= 50) return false;
 
     return true;
-  });
+  }).sort((a, b) => a.rollNumber.localeCompare(b.rollNumber));
 
   const selectedDept = departments.find(d => d.id === departmentFilter);
 
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-6">
+      {user?.role === 'advisor' && (
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 -ml-2 text-slate-500 hover:text-indigo-600"
+          onClick={() => navigate('/advisor/dashboard')}
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+        </Button>
+      )}
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -537,7 +560,7 @@ export default function Students() {
           >
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
           </Button>
-          {students.length > 0 && (
+          {isAdmin && students.length > 0 && (
             <Button variant="outline" className="text-destructive hover:bg-destructive/10" onClick={handleClearAll}>
               <Trash2 className="mr-2 h-4 w-4" />
               Clear All Records
@@ -552,10 +575,12 @@ export default function Students() {
             onChange={handleFileUpload}
           />
 
-          <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50" onClick={handleBulkImportClick} disabled={isLoading}>
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Import
-          </Button>
+          {canManage && (
+            <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50" onClick={handleBulkImportClick} disabled={isLoading}>
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk Import
+            </Button>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -580,134 +605,136 @@ export default function Students() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleAddClick}>Add Student</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{dialogMode === 'add' ? 'Add New Student' : 'Edit Student'}</DialogTitle>
-                <DialogDescription>
-                  {dialogMode === 'add'
-                    ? 'Enter the details of the student to add to the database.'
-                    : 'Update the student details below.'}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="roll" className="text-right">
-                    Roll No
-                  </Label>
-                  <Input
-                    id="roll"
-                    value={studentRoll}
-                    onChange={(e) => setStudentRoll(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={studentEmail}
-                    onChange={(e) => setStudentEmail(e.target.value)}
-                    className="col-span-3"
-                    placeholder="student@example.com"
-                  />
-                </div>
-                {dialogMode === 'add' && (
+          {canManage && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={handleAddClick}>Add Student</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{dialogMode === 'add' ? 'Add New Student' : 'Edit Student'}</DialogTitle>
+                  <DialogDescription>
+                    {dialogMode === 'add'
+                      ? 'Enter the details of the student to add to the database.'
+                      : 'Update the student details below.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="password" className="text-right">
-                      Password
+                    <Label htmlFor="name" className="text-right">
+                      Name
                     </Label>
                     <Input
-                      id="password"
-                      type="password"
-                      value={studentPassword}
-                      onChange={(e) => setStudentPassword(e.target.value)}
+                      id="name"
+                      value={studentName}
+                      onChange={(e) => setStudentName(e.target.value)}
                       className="col-span-3"
-                      placeholder="Set login password"
                     />
                   </div>
-                )}
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="dept" className="text-right">
-                    Dept
-                  </Label>
-                  <Select value={studentDept} onValueChange={setStudentDept}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="roll" className="text-right">
+                      Roll No
+                    </Label>
+                    <Input
+                      id="roll"
+                      value={studentRoll}
+                      onChange={(e) => setStudentRoll(e.target.value)}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="email" className="text-right">
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={studentEmail}
+                      onChange={(e) => setStudentEmail(e.target.value)}
+                      className="col-span-3"
+                      placeholder="student@example.com"
+                    />
+                  </div>
+                  {dialogMode === 'add' && (
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="password" className="text-right">
+                        Password
+                      </Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={studentPassword}
+                        onChange={(e) => setStudentPassword(e.target.value)}
+                        className="col-span-3"
+                        placeholder="Set login password"
+                      />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="dept" className="text-right">
+                      Dept
+                    </Label>
+                    <Select value={studentDept} onValueChange={setStudentDept}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="year" className="text-right">
+                      Year
+                    </Label>
+                    <Select
+                      value={studentYear}
+                      onValueChange={(value) => {
+                        setStudentYear(value);
+                      }}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {years.map((y) => (
+                          <SelectItem key={y.value} value={y.value.toString()}>
+                            {y.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="section" className="text-right">
+                      Section
+                    </Label>
+                    <Select value={studentSection} onValueChange={setStudentSection}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Section" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sections.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            Section {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="year" className="text-right">
-                    Year
-                  </Label>
-                  <Select
-                    value={studentYear}
-                    onValueChange={(value) => {
-                      setStudentYear(value);
-                    }}
-                  >
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((y) => (
-                        <SelectItem key={y.value} value={y.value.toString()}>
-                          {y.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="section" className="text-right">
-                    Section
-                  </Label>
-                  <Select value={studentSection} onValueChange={setStudentSection}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Section" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sections.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          Section {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleSaveStudent}>
-                  {dialogMode === 'add' ? 'Add Student' : 'Update Student'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button onClick={handleSaveStudent}>
+                    {dialogMode === 'add' ? 'Add Student' : 'Update Student'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -854,7 +881,7 @@ export default function Students() {
                 <TableHead className="text-center">OD</TableHead>
                 <TableHead>Attendance</TableHead>
                 <TableHead className="text-center">Status</TableHead>
-                <TableHead className="w-[100px] text-right">Actions</TableHead>
+                {canManage && <TableHead className="w-[100px] text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -919,30 +946,32 @@ export default function Students() {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2"
-                        onClick={() => handleEditClick(student)}
-                        title="Edit Student"
-                      >
-                        <Pencil className="mr-1 h-3.5 w-3.5" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2 text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDeleteStudent(student.id, student.name)}
-                        title="Delete Student"
-                      >
-                        <Trash2 className="mr-1 h-3.5 w-3.5" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {canManage && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2"
+                          onClick={() => handleEditClick(student)}
+                          title="Edit Student"
+                        >
+                          <Pencil className="mr-1 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteStudent(student.id, student.name)}
+                          title="Delete Student"
+                        >
+                          <Trash2 className="mr-1 h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {filteredStudents.length === 0 && (

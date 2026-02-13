@@ -6,7 +6,7 @@ import {
     deleteSubject,
     getTeacherSubjects
 } from '../controllers/subjectController.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -19,13 +19,13 @@ router.get('/', getAllSubjects);
 // Get subjects by teacher
 router.get('/teacher/:teacherId', getTeacherSubjects);
 
-// Add new subject
-router.post('/', addSubject);
+// Add new subject (Admin only)
+router.post('/', authorize('admin'), addSubject);
 
-// Update subject
-router.put('/:id', updateSubject);
+// Update subject (Admin only)
+router.put('/:id', authorize('admin'), updateSubject);
 
-// Delete subject
-router.delete('/:id', deleteSubject);
+// Delete subject (Admin only)
+router.delete('/:id', authorize('admin'), deleteSubject);
 
 export default router;

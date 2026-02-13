@@ -56,7 +56,9 @@ export const studentSignup = async (req, res) => {
             departmentId,
             year: parseInt(year),
             section,
-            currentSemester: currentSemester || 1
+            section,
+            currentSemester: currentSemester || 1,
+            isApproved: false // Explicitly set to false for new students
         });
         console.log(`[AUTH] User created: ${user._id}`);
 
@@ -73,7 +75,9 @@ export const studentSignup = async (req, res) => {
             departmentId,
             year: parseInt(year),
             section,
-            currentSemester: currentSemester || 1
+            section,
+            currentSemester: currentSemester || 1,
+            isApproved: false
         });
         console.log(`[AUTH] Student record created`);
 
@@ -143,6 +147,12 @@ export const studentLogin = async (req, res) => {
         if (!user.isActive) {
             console.log(`[AUTH] Account inactive for student: ${rollNumber}`);
             return res.status(403).json({ message: 'Account is deactivated' });
+        }
+
+        // Check if approved
+        if (user.isApproved === false) {
+            console.log(`[AUTH] Account pending approval for student: ${rollNumber}`);
+            return res.status(403).json({ message: 'Account pending approval from Advisor' });
         }
 
         // Generate token
@@ -471,5 +481,58 @@ export const getCurrentUser = async (req, res) => {
     } catch (error) {
         console.error('Get current user error:', error);
         res.status(500).json({ message: 'Error fetching user', error: error.message });
+    }
+};
+
+// Advisor Login
+export const advisorLogin = async (req, res) => {
+    try {
+        const { advisorId, password } = req.body;
+
+        if (!advisorId || !password) {
+            return res.status(400).json({ message: 'Please provide advisor ID and password' });
+        }
+
+        // Find user by advisor ID
+        const user = await User.findOne({ advisorId, role: 'advisor' });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid advisor ID or password' });
+        }
+
+        // Check password
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid advisor ID or password' });
+        }
+
+        // Check if account is active
+        if (!user.isActive) {
+            return res.status(403).json({ message: 'Account is deactivated' });
+        }
+
+        // Generate token
+        const token = generateToken(user.userId, user.role);
+
+        res.json({
+            success: true,
+            token,
+            user: {
+                userId: user.userId,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                advisorId: user.advisorId,
+                departmentId: user.departmentId,
+                section: user.section,
+                isFirstLogin: user.isFirstLogin || false
+            }
+        });
+
+        // Update last login
+        user.lastLogin = new Date();
+        await user.save();
+    } catch (error) {
+        console.error('Advisor login error:', error);
+        res.status(500).json({ message: 'Error logging in', error: error.message });
     }
 };

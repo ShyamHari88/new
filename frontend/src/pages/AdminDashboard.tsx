@@ -92,6 +92,7 @@ export default function AdminDashboard() {
 
     const [students, setStudents] = useState<any[]>([]);
     const [teachers, setTeachers] = useState<any[]>([]);
+    const [advisors, setAdvisors] = useState<any[]>([]);
     const [sessions, setSessions] = useState<any[]>([]);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [subjects, setSubjects] = useState<any[]>([]);
@@ -105,6 +106,7 @@ export default function AdminDashboard() {
     // Form states
     const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
     const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
+    const [isAddAdvisorOpen, setIsAddAdvisorOpen] = useState(false);
     const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
 
     const [newStudent, setNewStudent] = useState({
@@ -112,6 +114,9 @@ export default function AdminDashboard() {
     });
     const [newTeacher, setNewTeacher] = useState({
         name: '', email: '', teacherId: '', password: '', departmentId: '1'
+    });
+    const [newAdvisor, setNewAdvisor] = useState({
+        name: '', email: '', advisorId: '', password: '', departmentId: '1', section: 'A'
     });
     const [newSubject, setNewSubject] = useState({
         name: '', code: '', departmentId: '1', year: 1, semester: 1, teacherId: '', credits: 3
@@ -125,9 +130,10 @@ export default function AdminDashboard() {
 
     const loadData = async () => {
         try {
-            const [allStudents, allTeachers, allSessions, allLeaves, allSubjects] = await Promise.all([
+            const [allStudents, allTeachers, allAdvisors, allSessions, allLeaves, allSubjects] = await Promise.all([
                 dataService.getAllStudents(),
                 dataService.getAllTeachers(),
+                dataService.getAllAdvisors(),
                 dataService.getAllSessions(),
                 dataService.getAllLeaves(),
                 dataService.getAllSubjects()
@@ -135,6 +141,7 @@ export default function AdminDashboard() {
 
             setStudents(allStudents);
             setTeachers(allTeachers);
+            setAdvisors(allAdvisors);
             setSessions(allSessions);
             setLeaves(allLeaves);
             setSubjects(allSubjects);
@@ -252,11 +259,34 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleAddAdvisor = async (e: React.FormEvent) => {
+        e.preventDefault();
+        console.log('Frontend: Attempting to add advisor', newAdvisor);
+        try {
+            const result = await dataService.addAdvisor(newAdvisor);
+            console.log('Frontend: Advisor added successfully', result);
+
+            // Show explicit alert as requested
+            alert(`Advisor ${newAdvisor.name} created successfully!`);
+            toast.success('Advisor added successfully');
+
+            setIsAddAdvisorOpen(false);
+            setNewAdvisor({ name: '', email: '', advisorId: '', password: '', departmentId: '1', section: 'A' });
+            loadData();
+        } catch (error: any) {
+            console.error('Frontend: Error adding advisor', error);
+            const errorMessage = error.message || 'Failed to add advisor';
+            alert(`Error: ${errorMessage}`);
+            toast.error(errorMessage);
+        }
+    };
+
     const handleAddSubject = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await dataService.addSubject({
                 ...newSubject,
+                code: newSubject.name, // Automatically use name as code
                 id: '' // Generated
             } as any);
             toast.success('Subject added successfully');
@@ -313,6 +343,15 @@ export default function AdminDashboard() {
         reader.readAsText(file);
     };
 
+    const handleOpenAssignSubject = (teacherId: string, deptId: string) => {
+        setNewSubject(prev => ({
+            ...prev,
+            teacherId: teacherId,
+            departmentId: deptId || '1'
+        }));
+        setActiveTab('subjects');
+        setIsAddSubjectOpen(true);
+    };
 
 
     const filteredStudents = students.filter(s => {
@@ -697,6 +736,7 @@ export default function AdminDashboard() {
                                     <TabsList>
                                         <TabsTrigger value="students">Students</TabsTrigger>
                                         <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                                        <TabsTrigger value="advisors">Advisors</TabsTrigger>
                                     </TabsList>
                                     <div className="flex items-center gap-2">
                                         <div className="relative w-64">
@@ -822,6 +862,59 @@ export default function AdminDashboard() {
                                                 </form>
                                             </DialogContent>
                                         </Dialog>
+
+                                        {/* Add Advisor Button */}
+                                        <Dialog open={isAddAdvisorOpen} onOpenChange={setIsAddAdvisorOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button className="bg-emerald-600 ml-2">
+                                                    <Plus className="h-4 w-4 mr-2" /> Add Advisor
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Add New Advisor</DialogTitle>
+                                                </DialogHeader>
+                                                <form onSubmit={handleAddAdvisor} className="space-y-4">
+                                                    <div>
+                                                        <Label>Name</Label>
+                                                        <Input value={newAdvisor.name} onChange={e => setNewAdvisor({ ...newAdvisor, name: e.target.value })} required />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Advisor ID</Label>
+                                                        <Input value={newAdvisor.advisorId} onChange={e => setNewAdvisor({ ...newAdvisor, advisorId: e.target.value })} required />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Email</Label>
+                                                        <Input type="email" value={newAdvisor.email} onChange={e => setNewAdvisor({ ...newAdvisor, email: e.target.value })} required />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Password</Label>
+                                                        <Input type="password" value={newAdvisor.password} onChange={e => setNewAdvisor({ ...newAdvisor, password: e.target.value })} required />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <Label>Department</Label>
+                                                            <Select value={newAdvisor.departmentId} onValueChange={v => setNewAdvisor({ ...newAdvisor, departmentId: v })}>
+                                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div>
+                                                            <Label>Section</Label>
+                                                            <Select value={newAdvisor.section} onValueChange={v => setNewAdvisor({ ...newAdvisor, section: v })}>
+                                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    {sections.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+                                                    <Button type="submit" className="w-full">Create Advisor</Button>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
                                     </div>
                                 </div>
 
@@ -926,6 +1019,7 @@ export default function AdminDashboard() {
                                                     <TableHead>Name</TableHead>
                                                     <TableHead>Email</TableHead>
                                                     <TableHead>Department</TableHead>
+                                                    <TableHead>Subjects</TableHead>
                                                     <TableHead className="text-right">Actions</TableHead>
                                                 </TableRow>
                                             </TableHeader>
@@ -936,18 +1030,82 @@ export default function AdminDashboard() {
                                                         <TableCell>{teacher.name}</TableCell>
                                                         <TableCell>{teacher.email}</TableCell>
                                                         <TableCell>{departments.find(d => d.id === teacher.departmentId)?.name || teacher.departmentId}</TableCell>
+                                                        <TableCell>
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {subjects.filter(s => s.teacherId === teacher.teacherId).length > 0 ? (
+                                                                    subjects.filter(s => s.teacherId === teacher.teacherId).map(s => (
+                                                                        <span key={s.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                            {s.name}
+                                                                        </span>
+                                                                    ))
+                                                                ) : (
+                                                                    <span className="text-slate-400 text-xs italic">No subjects</span>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
                                                         <TableCell className="text-right">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                                                                onClick={() => handleDeleteUser('teacher', teacher.teacherId)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                                    onClick={() => handleOpenAssignSubject(teacher.teacherId || '', teacher.departmentId || '')}
+                                                                >
+                                                                    <Plus className="h-4 w-4 mr-1" /> Assign
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                                                                    onClick={() => handleDeleteUser('teacher', teacher.teacherId)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
+                            </TabsContent>
+
+                            <TabsContent value="advisors">
+                                <div className="flex justify-end mb-4">
+                                    <Button onClick={() => setIsAddAdvisorOpen(true)} className="bg-emerald-600">
+                                        <Plus className="h-4 w-4 mr-2" /> Add Advisor
+                                    </Button>
+                                </div>
+                                <Card className="border-none shadow-sm">
+                                    <CardContent className="p-0">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Advisor ID</TableHead>
+                                                    <TableHead>Name</TableHead>
+                                                    <TableHead>Email</TableHead>
+                                                    <TableHead>Department</TableHead>
+                                                    <TableHead>Section</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {advisors?.map((advisor) => (
+                                                    <TableRow key={advisor._id || advisor.advisorId}>
+                                                        <TableCell className="font-medium">{advisor.advisorId || 'N/A'}</TableCell>
+                                                        <TableCell>{advisor.name}</TableCell>
+                                                        <TableCell>{advisor.email}</TableCell>
+                                                        <TableCell>{advisor.departmentId}</TableCell>
+                                                        <TableCell>{advisor.section}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                                {advisors?.length === 0 && (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5} className="text-center py-6 text-slate-500">
+                                                            No advisors found. Add one to get started.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
                                             </TableBody>
                                         </Table>
                                     </CardContent>
@@ -977,10 +1135,7 @@ export default function AdminDashboard() {
                                                 <Label>Subject Name</Label>
                                                 <Input value={newSubject.name} onChange={e => setNewSubject({ ...newSubject, name: e.target.value })} required />
                                             </div>
-                                            <div>
-                                                <Label>Subject Code</Label>
-                                                <Input value={newSubject.code} onChange={e => setNewSubject({ ...newSubject, code: e.target.value })} required />
-                                            </div>
+
                                             <div>
                                                 <Label>Department</Label>
                                                 <Select value={newSubject.departmentId} onValueChange={v => setNewSubject({ ...newSubject, departmentId: v })}>
@@ -1029,7 +1184,7 @@ export default function AdminDashboard() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Code</TableHead>
+
                                             <TableHead>Name</TableHead>
                                             <TableHead>Department</TableHead>
                                             <TableHead>Class</TableHead>
@@ -1040,7 +1195,7 @@ export default function AdminDashboard() {
                                     <TableBody>
                                         {filteredSubjects.map((subject) => (
                                             <TableRow key={subject.id}>
-                                                <TableCell className="font-medium">{subject.code}</TableCell>
+
                                                 <TableCell>{subject.name}</TableCell>
                                                 <TableCell>{departments.find(d => d.id === subject.departmentId)?.name}</TableCell>
                                                 <TableCell>Year {subject.year} (Sem {subject.semester})</TableCell>

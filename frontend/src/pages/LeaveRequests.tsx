@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authService } from '@/services/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +23,8 @@ import {
     ShieldCheck,
     MessageSquare,
     AlertTriangle,
-    Inbox
+    Inbox,
+    ArrowLeft
 } from 'lucide-react';
 import {
     Table,
@@ -165,8 +168,20 @@ export default function LeaveRequests() {
         }
     };
 
+    const navigate = useNavigate();
+    const user = authService.getCurrentUser();
+
     return (
         <div className="space-y-6">
+            {user?.role === 'advisor' && (
+                <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 -ml-2 text-slate-500 hover:text-indigo-600"
+                    onClick={() => navigate('/advisor/dashboard')}
+                >
+                    <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+                </Button>
+            )}
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
@@ -177,15 +192,17 @@ export default function LeaveRequests() {
                         Review and respond to student leave & OD applications
                     </p>
                 </div>
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={fetchLeaveRequests}
-                    disabled={isLoading}
-                    title="Refresh"
-                >
-                    <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={fetchLeaveRequests}
+                        disabled={isLoading}
+                        title="Refresh"
+                    >
+                        <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                    </Button>
+                </div>
             </div>
 
             {/* Status Summary Cards */}

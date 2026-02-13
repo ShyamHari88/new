@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['teacher', 'student', 'admin'], required: true },
+    role: { type: String, enum: ['teacher', 'student', 'admin', 'advisor'], required: true },
 
     // Student specific
     rollNumber: { type: String, sparse: true, unique: true },
@@ -17,7 +17,11 @@ const userSchema = new mongoose.Schema({
     currentSemester: { type: Number },
 
     // Teacher specific
+    // Teacher specific
     teacherId: { type: String, sparse: true, unique: true },
+
+    // Advisor specific
+    advisorId: { type: String, sparse: true, unique: true },
 
     // Common
     departmentId: { type: String },
@@ -27,6 +31,7 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpire: { type: Date },
 
     isActive: { type: Boolean, default: true },
+    isApproved: { type: Boolean, default: true }, // Default true for non-students, overwritten for students
     isFirstLogin: { type: Boolean, default: true },
     lastLogin: { type: Date }
 }, { timestamps: true });
