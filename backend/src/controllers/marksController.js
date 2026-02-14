@@ -34,6 +34,24 @@ export const addMarks = async (req, res) => {
             return res.status(400).json({ message: 'Invalid marks format' });
         }
 
+        // Authorization check for teachers
+        if (req.user.role === 'teacher' && marks.length > 0) {
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const subjectNames = [...new Set(marks.map(m => m.subjectName))];
+
+            for (const subjectName of subjectNames) {
+                const isAllotted = await subjectModel.findOne({
+                    teacherId: req.user.userId,
+                    name: { $regex: new RegExp(`^${subjectName}$`, 'i') }
+                });
+                if (!isAllotted) {
+                    return res.status(403).json({
+                        message: `You are not authorized to add marks for subject: ${subjectName}`
+                    });
+                }
+            }
+        }
+
         const createdMarks = await Marks.insertMany(marks);
 
         // Notify students
@@ -91,6 +109,19 @@ export const getAllMarks = async (req, res) => {
         if (subjectName) filter.subjectName = subjectName;
         if (assessmentType) filter.assessmentType = assessmentType;
 
+        // If teacher, only show marks for subjects they are allotted to
+        if (req.user.role === 'teacher') {
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const allottedSubjects = await subjectModel.find({ teacherId: req.user.userId });
+            const subjectIds = allottedSubjects.map(s => s.subjectId);
+            const subjectNames = allottedSubjects.map(s => s.name);
+
+            filter.$or = [
+                { subjectId: { $in: subjectIds } },
+                { subjectName: { $in: subjectNames } }
+            ];
+        }
+
         const marks = await Marks.find(filter).sort({ createdAt: -1 });
 
         res.json({ success: true, marks });
@@ -106,15 +137,32 @@ export const updateMark = async (req, res) => {
         const { id } = req.params;
         const { marks } = req.body;
 
+        const existingMark = await Marks.findOne({ markId: id });
+        if (!existingMark) {
+            return res.status(404).json({ message: 'Mark not found' });
+        }
+
+        // Authorization check for teachers
+        if (req.user.role === 'teacher') {
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const isAllotted = await subjectModel.findOne({
+                teacherId: req.user.userId,
+                $or: [
+                    { subjectId: existingMark.subjectId },
+                    { name: existingMark.subjectName }
+                ]
+            });
+
+            if (!isAllotted) {
+                return res.status(403).json({ message: 'You are not authorized to update this mark' });
+            }
+        }
+
         const updatedMark = await Marks.findOneAndUpdate(
             { markId: id },
             { marks, updatedAt: new Date() },
             { new: true }
         );
-
-        if (!updatedMark) {
-            return res.status(404).json({ message: 'Mark not found' });
-        }
 
         // Notify student
         try {

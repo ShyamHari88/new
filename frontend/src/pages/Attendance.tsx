@@ -35,13 +35,24 @@ export default function Attendance() {
 
           if (session) {
             console.log('Found session:', session);
+
+            // Safety check: if trying to edit but don't have permission, switch to view
+            let finalEditId = editSessionId || undefined;
+            let finalViewId = viewSessionId || undefined;
+
+            if (finalEditId && session.canEdit === false) {
+              toast.info('Viewing in read-only mode (Not your assigned subject)');
+              finalViewId = finalEditId;
+              finalEditId = undefined;
+            }
+
             setSelectedClass({
               classInfo: session.classInfo,
               subject: session.subject,
               date: session.date,
               period: session.period,
-              editSessionId: editSessionId || undefined,
-              viewSessionId: viewSessionId || undefined
+              editSessionId: finalEditId,
+              viewSessionId: finalViewId
             });
           } else {
             console.error('Session not found:', sessionId);

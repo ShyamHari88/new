@@ -61,6 +61,7 @@ export interface AttendanceSession {
   absentCount: number;
   odCount: number;
   topicCovered?: string;
+  canEdit?: boolean;
 }
 
 export interface StudentAttendanceSummary {

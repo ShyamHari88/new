@@ -348,9 +348,61 @@ export const dataService = {
         }
     },
 
+    updateSubject: async (subjectId: string, updates: Partial<Subject>) => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.put(`/subjects/${subjectId}`, updates);
+
+            // Sync local storage
+            const all: Subject[] = JSON.parse(localStorage.getItem(SUBJECTS_KEY) || '[]');
+            const index = all.findIndex(s => s.id === subjectId);
+            if (index !== -1) {
+                all[index] = { ...all[index], ...updates };
+                localStorage.setItem(SUBJECTS_KEY, JSON.stringify(all));
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Error updating subject:', error);
+            throw error;
+        }
+    },
+
     getTeacherSubjects: async (teacherId: string): Promise<Subject[]> => {
         const all = await dataService.getAllSubjects();
         return all.filter(s => s.teacherId === teacherId);
+    },
+
+    // --- Assignments ---
+    getAllAssignments: async (filters?: any): Promise<any[]> => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.get('/assignments', { params: filters });
+            return response.data.success ? response.data.assignments : [];
+        } catch (error) {
+            console.error('Error fetching assignments:', error);
+            return [];
+        }
+    },
+
+    createAssignment: async (data: { subjectId: string, teacherId: string, department: string, section: string }) => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.post('/assignments', data);
+            return response.data;
+        } catch (error: any) {
+            console.error('Create assignment error:', error);
+            throw new Error(error.response?.data?.message || 'Failed to create assignment');
+        }
+    },
+
+    deleteAssignment: async (assignmentId: string) => {
+        try {
+            const { default: api } = await import('./api');
+            await api.delete(`/assignments/${assignmentId}`);
+        } catch (error) {
+            console.error('Error deleting assignment:', error);
+            throw error;
+        }
     },
 
     // --- Attendance ---
@@ -499,13 +551,7 @@ export const dataService = {
         const sessions = await dataService.getAllSessions();
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return false;
-
-        // Requirement: "within the permitted time". Let's use 24 hours.
-        const sessionDate = new Date(session.date);
-        const now = new Date();
-        const diffInHours = (now.getTime() - sessionDate.getTime()) / (1000 * 60 * 60);
-
-        return true; // Allow teachers to edit any session
+        return session.canEdit ?? true;
     },
 
     syncSessionsFromBackend: async (): Promise<AttendanceSession[]> => {
@@ -534,7 +580,9 @@ export const dataService = {
                         totalStudents: s.totalStudents,
                         presentCount: s.presentCount,
                         absentCount: s.absentCount,
-                        odCount: s.odCount
+                        odCount: s.odCount,
+                        topicCovered: s.topicCovered,
+                        canEdit: s.canEdit
                     };
                 });
 

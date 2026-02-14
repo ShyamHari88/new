@@ -19,6 +19,8 @@ import teacherRoutes from './routes/teachers.js';
 import timetableRoutes from './routes/timetable.js';
 import notificationRoutes from './routes/notifications.js';
 import advisorRoutes from './routes/advisor.js';
+import assignmentRoutes from './routes/assignments.js';
+
 
 const app = express();
 
@@ -56,6 +58,8 @@ app.use('/api/teachers', teacherRoutes);
 app.use('/api/timetable', timetableRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/advisor', advisorRoutes);
+app.use('/api/assignments', assignmentRoutes);
+
 
 
 

@@ -96,12 +96,18 @@ export default function AdminDashboard() {
     const [sessions, setSessions] = useState<any[]>([]);
     const [leaves, setLeaves] = useState<any[]>([]);
     const [subjects, setSubjects] = useState<any[]>([]);
+    const [assignments, setAssignments] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Filter states for students
     const [selectedDept, setSelectedDept] = useState('all');
     const [selectedYear, setSelectedYear] = useState('all');
     const [selectedSection, setSelectedSection] = useState('all');
+    const [selectedDeptSubject, setSelectedDeptSubject] = useState('all');
+    const [selectedYearSubject, setSelectedYearSubject] = useState('all');
+    const [selectedSemSubject, setSelectedSemSubject] = useState('all');
+
+
 
     // Form states
     const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
@@ -121,6 +127,11 @@ export default function AdminDashboard() {
     const [newSubject, setNewSubject] = useState({
         name: '', code: '', departmentId: '1', year: 1, semester: 1, teacherId: '', credits: 3
     });
+    const [isAssignTeacherOpen, setIsAssignTeacherOpen] = useState(false);
+    const [assigningSubject, setAssigningSubject] = useState<any>(null);
+    const [selectedTeacherForAssign, setSelectedTeacherForAssign] = useState('');
+    const [selectedDeptForAssign, setSelectedDeptForAssign] = useState('');
+    const [selectedSectionForAssign, setSelectedSectionForAssign] = useState('');
 
 
 
@@ -130,13 +141,14 @@ export default function AdminDashboard() {
 
     const loadData = async () => {
         try {
-            const [allStudents, allTeachers, allAdvisors, allSessions, allLeaves, allSubjects] = await Promise.all([
+            const [allStudents, allTeachers, allAdvisors, allSessions, allLeaves, allSubjects, allAssignments] = await Promise.all([
                 dataService.getAllStudents(),
                 dataService.getAllTeachers(),
                 dataService.getAllAdvisors(),
                 dataService.getAllSessions(),
                 dataService.getAllLeaves(),
-                dataService.getAllSubjects()
+                dataService.getAllSubjects(),
+                dataService.getAllAssignments()
             ]);
 
             setStudents(allStudents);
@@ -145,6 +157,7 @@ export default function AdminDashboard() {
             setSessions(allSessions);
             setLeaves(allLeaves);
             setSubjects(allSubjects);
+            setAssignments(allAssignments);
 
             // Calculate Stats
             const totalStudents = allStudents.length;
@@ -284,17 +297,80 @@ export default function AdminDashboard() {
     const handleAddSubject = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await dataService.addSubject({
-                ...newSubject,
-                code: newSubject.name, // Automatically use name as code
-                id: '' // Generated
-            } as any);
-            toast.success('Subject added successfully');
+            const deptsToCreate = newSubject.departmentId === 'all' ? departments.map(d => d.id) : [newSubject.departmentId];
+            const yearsToCreate = newSubject.year === 0 ? years.map(y => y.value) : [newSubject.year];
+            const semestersToCreate = newSubject.semester === 0 ? [1, 2, 3, 4, 5, 6, 7, 8] : [newSubject.semester];
+
+            let successCount = 0;
+            let totalToCreate = deptsToCreate.length * yearsToCreate.length * semestersToCreate.length;
+
+            if (totalToCreate > 20) {
+                if (!confirm(`This will create ${totalToCreate} subjects. Are you sure?`)) return;
+            }
+
+            for (const deptId of deptsToCreate) {
+                for (const year of yearsToCreate) {
+                    for (const sem of semestersToCreate) {
+                        try {
+                            await dataService.addSubject({
+                                ...newSubject,
+                                departmentId: deptId,
+                                year: year,
+                                semester: sem as any,
+                                code: newSubject.name,
+                                id: ''
+                            } as any);
+                            successCount++;
+                        } catch (err: any) {
+                            console.error(`Failed to create subject for Dept:${deptId}, Year:${year}, Sem:${sem}`, err);
+                            // If it's a duplicate, we can usually just continue
+                            if (!err.message?.includes('already exists')) {
+                                throw err;
+                            }
+                        }
+                    }
+                }
+            }
+
+            toast.success(`Successfully created ${successCount} subjects`);
             setIsAddSubjectOpen(false);
             setNewSubject({ name: '', code: '', departmentId: '1', year: 1, semester: 1, teacherId: '', credits: 3 });
             loadData();
         } catch (error: any) {
-            toast.error(error.message || 'Failed to add subject');
+            toast.error(error.message || 'Failed to add subject(s)');
+        }
+    };
+
+    const handleAssignTeacher = async () => {
+        if (!selectedTeacherForAssign || !selectedDeptForAssign || !selectedSectionForAssign) {
+            toast.error('Please select department, section and teacher');
+            return;
+        }
+
+        const subjectId = assigningSubject ? assigningSubject.id : (document.getElementById('subject-select') as HTMLSelectElement)?.value;
+
+        if (!subjectId && !assigningSubject) {
+            toast.error('Please select a subject');
+            return;
+        }
+
+        try {
+            await dataService.createAssignment({
+                subjectId: assigningSubject?.id || subjectId,
+                teacherId: selectedTeacherForAssign,
+                department: selectedDeptForAssign,
+                section: selectedSectionForAssign
+            });
+
+            toast.success('Faculty assigned successfully');
+            setIsAssignTeacherOpen(false);
+            setAssigningSubject(null);
+            setSelectedTeacherForAssign('');
+            setSelectedDeptForAssign('');
+            setSelectedSectionForAssign('');
+            loadData();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign teacher');
         }
     };
 
@@ -369,10 +445,16 @@ export default function AdminDashboard() {
         t.teacherId.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const filteredSubjects = subjects.filter(s =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.code.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredSubjects = subjects.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.code.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesDept = selectedDeptSubject === 'all' || s.departmentId === selectedDeptSubject;
+        const matchesYear = selectedYearSubject === 'all' || s.year.toString() === selectedYearSubject;
+        const matchesSem = selectedSemSubject === 'all' || s.semester.toString() === selectedSemSubject;
+        return matchesSearch && matchesDept && matchesYear && matchesSem;
+    });
+
+
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -1119,65 +1201,119 @@ export default function AdminDashboard() {
                     <div className="space-y-6 h-full">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-slate-700">All Subjects</h3>
-                            <Dialog open={isAddSubjectOpen} onOpenChange={setIsAddSubjectOpen}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-blue-600">
-                                        <Plus className="h-4 w-4 mr-2" /> Add Subject
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Add New Subject</DialogTitle>
-                                    </DialogHeader>
-                                    <form onSubmit={handleAddSubject} className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <Label>Subject Name</Label>
-                                                <Input value={newSubject.name} onChange={e => setNewSubject({ ...newSubject, name: e.target.value })} required />
-                                            </div>
-
-                                            <div>
-                                                <Label>Department</Label>
-                                                <Select value={newSubject.departmentId} onValueChange={v => setNewSubject({ ...newSubject, departmentId: v })}>
-                                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div>
-                                                <Label>Year (For Class)</Label>
-                                                <Select value={newSubject.year.toString()} onValueChange={v => setNewSubject({ ...newSubject, year: parseInt(v) })}>
-                                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {years.map(y => <SelectItem key={y.value} value={y.value.toString()}>{y.label}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div>
-                                                <Label>Semester</Label>
-                                                <Select value={newSubject.semester.toString()} onValueChange={v => setNewSubject({ ...newSubject, semester: parseInt(v) })}>
-                                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <SelectItem key={s} value={s.toString()}>Sem {s}</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div>
-                                                <Label>Assigned Teacher</Label>
-                                                <Select value={newSubject.teacherId} onValueChange={v => setNewSubject({ ...newSubject, teacherId: v })}>
-                                                    <SelectTrigger><SelectValue placeholder="Select Teacher" /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {filteredTeachers.map(t => <SelectItem key={t.teacherId} value={t.teacherId}>{t.name} ({t.teacherId})</SelectItem>)}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <Button type="submit" className="w-full">Create Subject</Button>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
+                            <div className="flex gap-2">
+                                <Button onClick={() => setIsAddSubjectOpen(true)} className="bg-blue-600 shadow-lg shadow-blue-500/20">
+                                    <Plus className="h-4 w-4 mr-2" /> Add Subject
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setAssigningSubject(null);
+                                        setSelectedDeptForAssign('');
+                                        setSelectedSectionForAssign('');
+                                        setSelectedTeacherForAssign('');
+                                        setIsAssignTeacherOpen(true);
+                                    }}
+                                    variant="outline"
+                                    className="border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm"
+                                >
+                                    <UserCog className="h-4 w-4 mr-2" /> Assign Teacher
+                                </Button>
+                            </div>
                         </div>
+
+                        {/* Filters Row */}
+                        <div className="flex gap-4 mb-6">
+                            <div className="w-[200px]">
+                                <Select value={selectedDeptSubject} onValueChange={setSelectedDeptSubject}>
+                                    <SelectTrigger className="h-10 rounded-xl bg-white border-slate-200 shadow-sm">
+                                        <Filter className="h-4 w-4 mr-2 text-slate-400" />
+                                        <SelectValue placeholder="Department" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Departments</SelectItem>
+                                        {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="w-[150px]">
+                                <Select value={selectedYearSubject} onValueChange={setSelectedYearSubject}>
+                                    <SelectTrigger className="h-10 rounded-xl bg-white border-slate-200 shadow-sm">
+                                        <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+                                        <SelectValue placeholder="Year" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Years</SelectItem>
+                                        {years.map(y => <SelectItem key={y.value} value={y.value.toString()}>{y.label}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="w-[150px]">
+                                <Select value={selectedSemSubject} onValueChange={setSelectedSemSubject}>
+                                    <SelectTrigger className="h-10 rounded-xl bg-white border-slate-200 shadow-sm">
+                                        <BookOpen className="h-4 w-4 mr-2 text-slate-400" />
+                                        <SelectValue placeholder="Semester" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Semesters</SelectItem>
+                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <SelectItem key={s} value={s.toString()}>Sem {s}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+
+                        <Dialog open={isAddSubjectOpen} onOpenChange={setIsAddSubjectOpen}>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Add New Subject</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handleAddSubject} className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Subject Name</Label>
+                                            <Input value={newSubject.name} onChange={e => setNewSubject({ ...newSubject, name: e.target.value })} required />
+                                        </div>
+
+                                        <div>
+                                            <Label>Department</Label>
+                                            <Select value={newSubject.departmentId} onValueChange={v => setNewSubject({ ...newSubject, departmentId: v })}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Departments</SelectItem>
+                                                    {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label>Year (For Class)</Label>
+                                            <Select value={newSubject.year.toString()} onValueChange={v => setNewSubject({ ...newSubject, year: parseInt(v) })}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="0">All Years</SelectItem>
+                                                    {years.map(y => <SelectItem key={y.value} value={y.value.toString()}>{y.label}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div>
+                                            <Label>Semester</Label>
+                                            <Select value={newSubject.semester.toString()} onValueChange={v => setNewSubject({ ...newSubject, semester: parseInt(v) })}>
+                                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="0">All Semesters</SelectItem>
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <SelectItem key={s} value={s.toString()}>Sem {s}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 h-12 rounded-xl font-bold shadow-lg shadow-blue-500/20 mt-4">
+                                        Create Subject(s)
+                                    </Button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+
 
                         <Card className="border-none shadow-sm">
                             <CardContent className="p-0">
@@ -1199,16 +1335,67 @@ export default function AdminDashboard() {
                                                 <TableCell>{subject.name}</TableCell>
                                                 <TableCell>{departments.find(d => d.id === subject.departmentId)?.name}</TableCell>
                                                 <TableCell>Year {subject.year} (Sem {subject.semester})</TableCell>
-                                                <TableCell>{teachers.find(t => t.teacherId === subject.teacherId)?.name || 'Unassigned'}</TableCell>
+                                                <TableCell>
+                                                    {assignments.filter(a => a.subjectId === subject.id).length > 0 ? (
+                                                        <div className="flex flex-col gap-1.5">
+                                                            {assignments
+                                                                .filter(a => a.subjectId === subject.id)
+                                                                .sort((a, b) => a.section.localeCompare(b.section))
+                                                                .map(a => (
+                                                                    <div
+                                                                        key={a.assignmentId}
+                                                                        className="flex items-center gap-2 cursor-pointer hover:bg-blue-50/50 p-1 rounded-lg transition-colors group"
+                                                                        onClick={() => toast.info(
+                                                                            <div className="flex flex-col gap-1">
+                                                                                <p className="font-bold text-blue-800">Assignment Details</p>
+                                                                                <p className="text-xs text-slate-600">
+                                                                                    Subject: <span className="font-semibold text-slate-900">{subject.name}</span>
+                                                                                </p>
+                                                                                <p className="text-xs text-slate-600">
+                                                                                    Section: <span className="font-semibold text-slate-900">{a.section}</span>
+                                                                                </p>
+                                                                                <p className="text-xs text-slate-600">
+                                                                                    Faculty: <span className="font-semibold text-slate-900">{teachers.find(t => t.teacherId === a.teacherId)?.name || 'Unknown'}</span>
+                                                                                </p>
+                                                                            </div>,
+                                                                            { duration: 4000 }
+                                                                        )}
+                                                                    >
+                                                                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded border border-blue-100 group-hover:bg-blue-100 transition-colors">Sec {a.section}</span>
+                                                                        <span className="text-xs font-medium text-slate-700 group-hover:text-blue-700 transition-colors">{teachers.find(t => t.teacherId === a.teacherId)?.name || 'Unknown'}</span>
+                                                                    </div>
+                                                                ))
+                                                            }
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-slate-400 text-xs italic">Unassigned</span>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                                                        onClick={() => handleDeleteSubject(subject.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                            onClick={() => {
+                                                                setAssigningSubject(subject);
+                                                                setSelectedDeptForAssign(subject.departmentId);
+                                                                setSelectedSectionForAssign('');
+                                                                setSelectedTeacherForAssign(subject.teacherId || '');
+                                                                setIsAssignTeacherOpen(true);
+                                                            }}
+                                                        >
+                                                            <UserCog className="h-4 w-4 mr-1" /> {subject.teacherId ? 'Reassign' : 'Assign'}
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                                                            onClick={() => handleDeleteSubject(subject.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -1216,10 +1403,107 @@ export default function AdminDashboard() {
                                 </Table>
                             </CardContent>
                         </Card>
+
+                        {/* Assign Teacher Dialog */}
+                        <Dialog open={isAssignTeacherOpen} onOpenChange={setIsAssignTeacherOpen}>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle className="flex items-center gap-2">
+                                        <UserCog className="h-5 w-5 text-blue-600" />
+                                        Faculty Assignment
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        {assigningSubject ? (
+                                            <>Assign faculty for: <span className="font-bold text-slate-900">{assigningSubject.name}</span></>
+                                        ) : (
+                                            "Select a subject and faculty member to create an assignment"
+                                        )}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Select Department</Label>
+                                        <Select value={selectedDeptForAssign} onValueChange={setSelectedDeptForAssign}>
+                                            <SelectTrigger className="h-12 rounded-xl">
+                                                <SelectValue placeholder="Choose department..." />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {!assigningSubject && (
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Select Subject</Label>
+                                            <Select
+                                                value={assigningSubject?.id || ""}
+                                                onValueChange={(val) => {
+                                                    const sub = subjects.find(s => s.id === val);
+                                                    setAssigningSubject(sub);
+                                                }}
+                                            >
+                                                <SelectTrigger className="h-12 rounded-xl" id="subject-select">
+                                                    <SelectValue placeholder="Choose a subject..." />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {subjects
+                                                        .filter(s => !selectedDeptForAssign || s.departmentId === selectedDeptForAssign)
+                                                        .map(s => (
+                                                            <SelectItem key={s.id} value={s.id}>
+                                                                {s.name} ({departments.find(d => d.id === s.departmentId)?.code} - Yr {s.year})
+                                                            </SelectItem>
+                                                        ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Section</Label>
+                                            <Select value={selectedSectionForAssign} onValueChange={setSelectedSectionForAssign}>
+                                                <SelectTrigger className="h-12 rounded-xl">
+                                                    <SelectValue placeholder="Sec" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {['A', 'B', 'C'].map(s => <SelectItem key={s} value={s}>Section {s}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Assign Faculty</Label>
+                                            <Select value={selectedTeacherForAssign} onValueChange={setSelectedTeacherForAssign}>
+                                                <SelectTrigger className="h-12 rounded-xl">
+                                                    <SelectValue placeholder="Select faculty" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {teachers.map(t => (
+                                                        <SelectItem key={t.teacherId} value={t.teacherId}>
+                                                            <div className="flex flex-col py-1">
+                                                                <span className="font-bold">{t.name}</span>
+                                                                <span className="text-[10px] text-slate-500">
+                                                                    {t.teacherId} • {departments.find(d => d.id === t.departmentId)?.code}
+                                                                </span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter className="gap-2 sm:gap-0">
+                                    <Button variant="ghost" onClick={() => setIsAssignTeacherOpen(false)} className="rounded-xl h-12">Cancel</Button>
+                                    <Button onClick={handleAssignTeacher} className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl flex-1 shadow-lg shadow-blue-500/20">
+                                        Save Changes
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 )}
-
-
 
                 {activeTab === 'attendance' && (
                     <div className="space-y-6">
@@ -1293,3 +1577,4 @@ export default function AdminDashboard() {
         </div>
     );
 }
+

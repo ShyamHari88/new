@@ -59,6 +59,24 @@ export const addAttendanceRecords = async (req, res) => {
 
         const teacherId = req.user.role === 'teacher' ? req.user.userId : req.body.teacherId;
 
+        // Authorization check for teachers
+        if (req.user.role === 'teacher' && records.length > 0) {
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const subjectNames = [...new Set(records.map(r => r.subjectName))];
+
+            for (const subjectName of subjectNames) {
+                const isAllotted = await subjectModel.findOne({
+                    teacherId: req.user.userId,
+                    name: { $regex: new RegExp(`^${subjectName}$`, 'i') }
+                });
+                if (!isAllotted) {
+                    return res.status(403).json({
+                        message: `You are not authorized to add attendance for subject: ${subjectName}`
+                    });
+                }
+            }
+        }
+
         // Add topicCovered and teacherId to each record
         const recordsToSave = records.map(r => ({ ...r, topicCovered, teacherId }));
 
@@ -130,9 +148,14 @@ export const getAllAttendance = async (req, res) => {
         if (section) filter.section = section;
         if (subjectName) filter.subjectName = subjectName;
 
-        // If teacher, only show their own records
+        // If teacher, show records for ALL subjects in departments where they handle at least one subject
         if (req.user.role === 'teacher') {
-            filter.teacherId = req.user.userId;
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const teacherSubjects = await subjectModel.find({ teacherId: req.user.userId });
+            const handledDepartmentIds = [...new Set(teacherSubjects.map(s => s.departmentId))];
+
+            // Filter to show all records in handled departments
+            filter.departmentId = { $in: handledDepartmentIds };
         }
 
         const records = await AttendanceRecord.find(filter).sort({ date: -1 });
@@ -148,8 +171,16 @@ export const getAllAttendance = async (req, res) => {
 export const getAllSessions = async (req, res) => {
     try {
         const filter = {};
+        let teacherAllottedSubjectNames = [];
+
+        // If teacher, only show sessions for departments where they handle subjects
         if (req.user.role === 'teacher') {
-            filter.teacherId = req.user.userId;
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const teacherSubjects = await subjectModel.find({ teacherId: req.user.userId });
+            const handledDepartmentIds = [...new Set(teacherSubjects.map(s => s.departmentId))];
+            teacherAllottedSubjectNames = teacherSubjects.map(s => s.name.toLowerCase());
+
+            filter.departmentId = { $in: handledDepartmentIds };
         }
 
         const records = await AttendanceRecord.find(filter).sort({ date: -1 });
@@ -201,7 +232,8 @@ export const getAllSessions = async (req, res) => {
                 presentCount,
                 absentCount,
                 odCount,
-                topicCovered: session.topicCovered
+                topicCovered: session.topicCovered,
+                canEdit: req.user.role === 'admin' || teacherAllottedSubjectNames.includes(session.subject.toLowerCase())
             };
         });
 
@@ -247,6 +279,18 @@ export const getAttendanceBySessionId = async (req, res) => {
         const year = parseInt(parts[periodIndex + 2]);
         const section = parts[periodIndex + 3];
 
+        // Authorization check for teachers
+        if (req.user.role === 'teacher') {
+            const subjectModel = (await import('../models/Subject.js')).default;
+            // A teacher can VIEW if they handle subjects in the same department
+            const teacherSubjects = await subjectModel.find({ teacherId: req.user.userId });
+            const handledDepartmentIds = [...new Set(teacherSubjects.map(s => s.departmentId))];
+
+            if (!handledDepartmentIds.includes(departmentId)) {
+                return res.status(403).json({ message: 'You are not authorized to view this session' });
+            }
+        }
+
         // Find all records matching this session
         const records = await AttendanceRecord.find({
             date: {
@@ -274,6 +318,19 @@ export const deleteAttendanceSession = async (req, res) => {
 
         if (!date || !subject || period === undefined || !departmentId || !year || !section) {
             return res.status(400).json({ message: 'Missing required fields' });
+        }
+
+        // Authorization check for teachers
+        if (req.user.role === 'teacher') {
+            const subjectModel = (await import('../models/Subject.js')).default;
+            const isAllotted = await subjectModel.findOne({
+                teacherId: req.user.userId,
+                name: { $regex: new RegExp(`^${subject}$`, 'i') }
+            });
+
+            if (!isAllotted) {
+                return res.status(403).json({ message: 'You are not authorized to delete this session' });
+            }
         }
 
         // Parse the date to match MongoDB format

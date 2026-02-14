@@ -32,7 +32,7 @@ export const addSubject = async (req, res) => {
         const { name, code, departmentId, year, semester, teacherId, credits } = req.body;
 
         // Validation
-        if (!name || !code || !departmentId || !year || !semester || !teacherId) {
+        if (!name || !code || !departmentId || !year || !semester) {
             return res.status(400).json({ message: 'Please provide all required fields' });
         }
 
