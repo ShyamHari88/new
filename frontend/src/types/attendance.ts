@@ -48,6 +48,7 @@ export interface ClassInfo {
   departmentCode: string;
   year: number;
   section: string;
+  semester?: number;
 }
 
 export interface AttendanceSession {

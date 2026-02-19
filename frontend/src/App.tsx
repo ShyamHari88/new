@@ -17,6 +17,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 import StudentDashboard from "./pages/StudentDashboard";
 import StudentAttendanceHistory from "./pages/StudentAttendanceHistory";
+import StudentMarksHistory from "./pages/StudentMarksHistory";
 import SubjectsPage from "./pages/SubjectsPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdvisorDashboard from "./pages/AdvisorDashboard";
@@ -60,6 +61,11 @@ const App = () => (
           <Route path="/student/attendance-history" element={
             <RequireAuth role="student">
               <StudentAttendanceHistory />
+            </RequireAuth>
+          } />
+          <Route path="/student/marks-history" element={
+            <RequireAuth role="student">
+              <StudentMarksHistory />
             </RequireAuth>
           } />
 

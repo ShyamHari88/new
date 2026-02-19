@@ -119,7 +119,11 @@ export function AttendanceMarker({ classInfo, subject, date, period, onBack, edi
       teacherId: 'teacher-1',
       date: date,
       period: period,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      semester: classInfo.semester,
+      departmentId: classInfo.departmentId,
+      year: classInfo.year,
+      section: classInfo.section
     }));
 
     try {

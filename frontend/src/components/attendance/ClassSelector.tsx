@@ -60,6 +60,7 @@ export function ClassSelector({ onClassSelect }: ClassSelectorProps) {
         departmentCode: selectedDept.code,
         year: parseInt(year),
         section,
+        semester: parseInt(semester)
       }, selectedSubject.name, date, period);
     }
   };

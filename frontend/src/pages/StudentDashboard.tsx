@@ -425,10 +425,17 @@ export default function StudentDashboard() {
                                     <div className="space-y-6">
                                         {subjectAttendance.length > 0 ? (
                                             subjectAttendance.map((sub, idx) => (
-                                                <div key={idx} className="group/sub">
+                                                <div
+                                                    key={idx}
+                                                    className="group/sub cursor-pointer hover:bg-slate-50/80 p-2 rounded-2xl transition-all active:scale-[0.98]"
+                                                    onClick={() => navigate(`/student/attendance-history?subject=${encodeURIComponent(sub.subject)}`)}
+                                                >
                                                     <div className="flex justify-between items-end mb-2">
                                                         <div className="max-w-[70%]">
-                                                            <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-wide group-hover/sub:text-blue-600 transition-colors truncate">{sub.subject}</h5>
+                                                            <div className="flex items-center gap-2">
+                                                                <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-wide group-hover/sub:text-blue-600 transition-colors truncate">{sub.subject}</h5>
+                                                                <ExternalLink className="h-3 w-3 text-slate-300 opacity-0 group-hover/sub:opacity-100 transition-opacity" />
+                                                            </div>
                                                             <p className="text-[10px] font-bold text-slate-400 mt-0.5">{sub.present}P / {sub.total}T • {sub.od} OD Periods</p>
                                                         </div>
                                                         <div className="text-right">
@@ -485,11 +492,18 @@ export default function StudentDashboard() {
                                     <div className="space-y-6">
                                         {filteredMarks.length > 0 ? (
                                             filteredMarks.map((m, idx) => (
-                                                <div key={idx} className="group/mark">
+                                                <div
+                                                    key={idx}
+                                                    className="group/mark cursor-pointer hover:bg-slate-50/50 p-2 rounded-2xl transition-all active:scale-[0.98]"
+                                                    onClick={() => navigate(`/student/marks-history?subject=${encodeURIComponent(m.subject)}`)}
+                                                >
                                                     <div className="flex justify-between items-end mb-2">
                                                         <div className="max-w-[70%]">
-                                                            <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-wide group-hover/mark:text-premium transition-colors truncate">{m.subject}</h5>
-                                                            <p className="text-[10px] font-bold text-slate-400 mt-0.5">Average Performance Score</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-wide group-hover/mark:text-premium transition-colors truncate">{m.subject}</h5>
+                                                                <ExternalLink className="h-3 w-3 text-slate-300 opacity-0 group-hover/mark:opacity-100 transition-opacity" />
+                                                            </div>
+                                                            <p className="text-[10px] font-bold text-slate-400 mt-0.5">Assessment Analytics View</p>
                                                         </div>
                                                         <div className="text-right">
                                                             <span className="text-sm font-black font-display text-premium">{m.score}%</span>

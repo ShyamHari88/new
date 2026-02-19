@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authService } from '@/services/auth';
 import api from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { Calendar, CheckCircle2, XCircle, Clock, Filter, Download } from 'lucide-react';
+import { Calendar, CheckCircle2, XCircle, Clock, Filter, Download, ArrowLeft } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AttendanceRecord {
     _id: string;
@@ -24,21 +26,29 @@ export default function StudentAttendanceHistory() {
     const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
     const [filteredRecords, setFilteredRecords] = useState<AttendanceRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const [dateFilter, setDateFilter] = useState({
         from: '',
         to: '',
     });
+    const [subjectFilter, setSubjectFilter] = useState<string>('ALL');
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const user = authService.getCurrentUser();
     const studentId = user?.studentId || user?.id;
 
     useEffect(() => {
         loadAttendanceHistory();
+
+        const subj = searchParams.get('subject');
+        if (subj) {
+            setSubjectFilter(subj);
+        }
     }, []);
 
     useEffect(() => {
         filterRecords();
-    }, [dateFilter, attendanceRecords]);
+    }, [dateFilter, subjectFilter, attendanceRecords]);
 
     const loadAttendanceHistory = async () => {
         try {
@@ -71,6 +81,12 @@ export default function StudentAttendanceHistory() {
             );
         }
 
+        if (subjectFilter !== 'ALL') {
+            filtered = filtered.filter(record =>
+                record.subject.toLowerCase() === subjectFilter.toLowerCase()
+            );
+        }
+
         // Sort by date (newest first)
         filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -79,6 +95,8 @@ export default function StudentAttendanceHistory() {
 
     const clearFilters = () => {
         setDateFilter({ from: '', to: '' });
+        setSubjectFilter('ALL');
+        setSearchParams({});
     };
 
     const getStatusIcon = (status: string) => {
@@ -158,11 +176,21 @@ export default function StudentAttendanceHistory() {
             <div className="mx-auto max-w-7xl space-y-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Attendance History</h1>
-                        <p className="text-sm text-slate-500 mt-1">
-                            View your complete attendance records
-                        </p>
+                    <div className="flex items-center gap-4">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate('/student-dashboard')}
+                            className="h-10 w-10 rounded-xl bg-white shadow-sm border border-slate-200 hover:bg-white hover:text-blue-600 hover:border-blue-100 transition-all active:scale-95"
+                        >
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-900">Attendance History</h1>
+                            <p className="text-sm text-slate-500 mt-1">
+                                View your complete attendance records
+                            </p>
+                        </div>
                     </div>
                     <Button
                         onClick={exportToCSV}
@@ -209,13 +237,39 @@ export default function StudentAttendanceHistory() {
                                     className="rounded-lg"
                                 />
                             </div>
-                            <div className="flex items-end">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">
+                                    Subject
+                                </Label>
+                                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                                    <SelectTrigger className="w-full rounded-lg">
+                                        <SelectValue placeholder="All Subjects" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ALL">All Subjects</SelectItem>
+                                        {Array.from(new Set(attendanceRecords.map(r => r.subject))).map(subj => (
+                                            <SelectItem key={subj} value={subj}>{subj}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="md:col-span-3 flex justify-between items-end gap-4">
+                                {subjectFilter !== 'ALL' && (
+                                    <Button
+                                        onClick={() => setSubjectFilter('ALL')}
+                                        variant="secondary"
+                                        className="gap-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 border-none"
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        Show All Subjects
+                                    </Button>
+                                )}
                                 <Button
                                     onClick={clearFilters}
                                     variant="outline"
-                                    className="w-full rounded-lg"
+                                    className="px-8 rounded-lg ml-auto"
                                 >
-                                    Clear Filters
+                                    Clear All Filters
                                 </Button>
                             </div>
                         </div>
@@ -283,8 +337,19 @@ export default function StudentAttendanceHistory() {
 
                 {/* Attendance Records */}
                 <Card className="rounded-2xl border-slate-200 shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Attendance Records</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-lg">
+                            {subjectFilter === 'ALL' ? 'Attendance Records' : `Attendance: ${subjectFilter}`}
+                        </CardTitle>
+                        {subjectFilter !== 'ALL' && (
+                            <Badge
+                                variant="secondary"
+                                className="bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-pointer gap-2 py-1.5 px-3 rounded-full border-none transition-all active:scale-95"
+                                onClick={() => setSubjectFilter('ALL')}
+                            >
+                                {subjectFilter} <XCircle className="h-3.5 w-3.5" />
+                            </Badge>
+                        )}
                     </CardHeader>
                     <CardContent>
                         <ScrollArea className="h-[600px] pr-4">
@@ -303,7 +368,11 @@ export default function StudentAttendanceHistory() {
                                                 {records.map((record) => (
                                                     <div
                                                         key={record._id}
-                                                        className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-shadow"
+                                                        onClick={() => setSubjectFilter(prev => prev === record.subject ? 'ALL' : record.subject)}
+                                                        className={cn(
+                                                            "flex items-center justify-between p-4 bg-white border rounded-xl hover:shadow-md transition-all cursor-pointer group",
+                                                            subjectFilter === record.subject ? "border-blue-500 bg-blue-50/20 shadow-sm" : "border-slate-200 hover:border-blue-200"
+                                                        )}
                                                     >
                                                         <div className="flex items-center gap-4">
                                                             <div className="flex items-center justify-center w-10 h-10 bg-slate-50 rounded-lg">

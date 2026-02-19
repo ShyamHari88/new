@@ -22,7 +22,8 @@ export const getStudentAttendance = async (req, res) => {
                     present: 0,
                     absent: 0,
                     od: 0,
-                    percentage: 0
+                    percentage: 0,
+                    semester: record.semester
                 };
             }
 
