@@ -480,50 +480,39 @@ export default function StudentDashboard() {
                                     </Select>
                                 </div>
                             </CardHeader>
-                            <CardContent className="p-8 pt-4 flex-1">
-                                <div className="h-[300px] w-full">
-                                    {filteredMarks.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={filteredMarks} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                                                <defs>
-                                                    <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E2E8F0" />
-                                                <XAxis dataKey="subject" hide />
-                                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94A3B8', fontWeight: '800' }} domain={[0, 100]} />
-                                                <Tooltip
-                                                    contentStyle={{
-                                                        borderRadius: '1.5rem',
-                                                        border: 'none',
-                                                        boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-                                                        padding: '12px 20px'
-                                                    }}
-                                                    labelStyle={{ fontWeight: '900', color: '#1E293B', textTransform: 'uppercase', fontSize: '10px' }}
-                                                />
-                                                <Area
-                                                    type="monotone"
-                                                    dataKey="score"
-                                                    stroke="#3b82f6"
-                                                    strokeWidth={5}
-                                                    fill="url(#chartGradient)"
-                                                    animationDuration={2000}
-                                                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
-                                                    activeDot={{ r: 7, strokeWidth: 0 }}
-                                                />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
-                                            <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center border-2 border-dashed border-slate-100 mt-10">
-                                                <BarChart className="h-10 w-10 opacity-20" />
+                            <CardContent className="px-8 pb-8">
+                                <ScrollArea className="h-[340px] pr-4">
+                                    <div className="space-y-6">
+                                        {filteredMarks.length > 0 ? (
+                                            filteredMarks.map((m, idx) => (
+                                                <div key={idx} className="group/mark">
+                                                    <div className="flex justify-between items-end mb-2">
+                                                        <div className="max-w-[70%]">
+                                                            <h5 className="text-[11px] font-black text-slate-800 uppercase tracking-wide group-hover/mark:text-premium transition-colors truncate">{m.subject}</h5>
+                                                            <p className="text-[10px] font-bold text-slate-400 mt-0.5">Average Performance Score</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-sm font-black font-display text-premium">{m.score}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="h-2.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                                                        <div
+                                                            className="h-full transition-all duration-700 ease-out shadow-sm rounded-full premium-gradient"
+                                                            style={{ width: `${m.score}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="py-24 text-center">
+                                                <div className="h-16 w-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-slate-100 border-dashed">
+                                                    <TrendingUp className="h-8 w-8 text-slate-200" />
+                                                </div>
+                                                <p className="text-xs font-black text-slate-300 uppercase tracking-[0.2em]">No Marks Data Available</p>
                                             </div>
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">No Assessment Data</p>
-                                        </div>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
+                                </ScrollArea>
                             </CardContent>
                         </Card>
                     </div>
