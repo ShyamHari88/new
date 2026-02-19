@@ -68,13 +68,15 @@ export default function Login() {
 
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-2 shadow-lg">
-            <img
-              src="/easy-attendance-logo.png"
-              alt="EasyAttendance Logo"
-              className="h-full w-full object-contain"
-            />
-          </div>
+          <Link to="/" className="inline-block transition-transform hover:scale-105 active:scale-95">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-2 shadow-lg">
+              <img
+                src="/easy-attendance-logo.png"
+                alt="EasyAttendance Logo"
+                className="h-full w-full object-contain"
+              />
+            </div>
+          </Link>
           <h1 className="font-display text-3xl font-bold text-foreground">EasyAttendance</h1>
           <p className="mt-2 text-muted-foreground">Online Attendance Management System</p>
         </div>

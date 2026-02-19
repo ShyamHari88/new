@@ -265,15 +265,34 @@ export const getActionableLeaveRequests = async (req, res) => {
 
         const studentIds = students.map(s => s.studentId);
 
-        // 2. Find pending requests for these students
-        const requests = await LeaveRequest.find({
+        // 2. Find pending requests for these students using raw collection
+        const requests = await LeaveRequest.collection.find({
             studentId: { $in: studentIds },
             status: 'pending'
-        }).sort({ createdAt: 1 });
+        }).sort({ createdAt: 1 }).toArray();
+
+        // Format for frontend: handle IDs and ensure attachments array exists
+        const formattedRequests = requests.map(req => {
+            // Handle legacy 'attachment' string/object if it exists
+            let attachments = req.attachments || [];
+            if (attachments.length === 0 && req.attachment) {
+                attachments = [typeof req.attachment === 'string' ? { url: req.attachment, name: 'Attachment', type: 'image/jpeg' } : req.attachment];
+            }
+
+            return {
+                ...req,
+                _id: req._id.toString(),
+                attachments: attachments.map(a => ({
+                    ...a,
+                    // Ensure URL is absolute
+                    url: a.url?.startsWith('http') ? a.url : `${process.env.BACKEND_URL || 'http://localhost:5000'}${a.url?.startsWith('/') ? '' : '/'}${a.url || ''}`
+                }))
+            };
+        });
 
         res.json({
             success: true,
-            requests
+            requests: formattedRequests
         });
 
     } catch (error) {
@@ -299,15 +318,52 @@ export const handleLeaveRequest = async (req, res) => {
         // Verify student belongs to advisor
         const student = await Student.findOne({ studentId: request.studentId });
         if (!student || student.departmentId !== advisor.departmentId || student.section !== advisor.section) {
-            return res.status(403).json({ message: 'Unlock: Student not in your section' });
+            return res.status(403).json({ message: 'Access denied: Student not in your section' });
         }
 
         request.status = status;
         await request.save();
 
+        // --- NEW: Sync with LeaveController logic ---
+
+        // 1. If approved and type is On-Duty, automatically mark attendance as OD
+        if (status === 'approved' && request.type === 'On-Duty') {
+            try {
+                const startDate = new Date(request.fromDate);
+                const endDate = new Date(request.toDate);
+
+                const updateResult = await AttendanceRecord.updateMany(
+                    {
+                        studentId: request.studentId,
+                        date: { $gte: startDate, $lte: endDate }
+                    },
+                    { $set: { status: 'od' } }
+                );
+                console.log(`✅ Advisor auto-marked ${updateResult.modifiedCount} records as OD for ${request.studentName}`);
+            } catch (attendanceError) {
+                console.error('Error auto-marking attendance as OD:', attendanceError);
+            }
+        }
+
+        // 2. Send notification to student
+        try {
+            const Notification = (await import('../models/Notification.js')).default;
+            await Notification.create({
+                userId: request.studentId,
+                title: `Leave Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+                message: `Your ${request.type} request from ${new Date(request.fromDate).toLocaleDateString()} to ${new Date(request.toDate).toLocaleDateString()} has been ${status} by your Class Advisor.`,
+                type: 'leave_update'
+            });
+        } catch (noteError) {
+            console.error('Error sending student notification:', noteError);
+        }
+
         res.json({
             success: true,
-            message: `Leave request ${status}`
+            message: status === 'approved' && request.type === 'On-Duty'
+                ? 'OD approved and attendance automatically marked'
+                : `Leave request ${status}`,
+            leave: request
         });
 
     } catch (error) {

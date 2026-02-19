@@ -251,6 +251,15 @@ export default function StudentDashboard() {
             <header className="sticky top-0 z-50 glass-card border-none px-6 py-4 mx-4 mt-4 rounded-[2rem]">
                 <div className="mx-auto max-w-7xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate('/login')}
+                            className="h-10 w-10 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                            title="Back to Login"
+                        >
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
                         <div className="h-10 w-10 premium-gradient rounded-xl flex items-center justify-center text-white shadow-lg">
                             <GraduationCap className="h-6 w-6" />
                         </div>
@@ -583,10 +592,29 @@ export default function StudentDashboard() {
                                                             <div>
                                                                 <div className="flex items-center gap-2">
                                                                     <h4 className="text-sm font-black text-slate-800 tracking-tight uppercase">{leave.type}</h4>
-                                                                    {(leave.attachments?.length > 0 || leave.attachment) && (
-                                                                        <Badge variant="outline" className="h-5 px-1.5 border-blue-100 text-[#3b82f6] text-[8px] font-black tracking-tighter uppercase">
-                                                                            <Download className="h-2.5 w-2.5 mr-0.5" /> DOC
-                                                                        </Badge>
+                                                                    {leave.attachments?.map((att: any, idx: number) => (
+                                                                        <a
+                                                                            key={idx}
+                                                                            href={att.url?.startsWith('http') ? att.url : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${att.url?.startsWith('/') ? '' : '/'}${att.url}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="no-underline"
+                                                                        >
+                                                                            <Badge variant="outline" className="h-5 px-1.5 border-blue-100 text-[#3b82f6] text-[8px] font-black tracking-tighter uppercase cursor-pointer hover:bg-blue-50 transition-colors">
+                                                                                <ExternalLink className="h-2.5 w-2.5 mr-0.5" /> ATTACHMENT {leave.attachments.length > 1 ? idx + 1 : ''}
+                                                                            </Badge>
+                                                                        </a>
+                                                                    ))}
+                                                                    {(!leave.attachments || leave.attachments.length === 0) && leave.attachment && (
+                                                                        <a
+                                                                            href={typeof leave.attachment === 'string' ? (leave.attachment.startsWith('http') ? leave.attachment : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${leave.attachment.startsWith('/') ? '' : '/'}${leave.attachment}`) : '#'}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                        >
+                                                                            <Badge variant="outline" className="h-5 px-1.5 border-blue-100 text-[#3b82f6] text-[8px] font-black tracking-tighter uppercase cursor-pointer hover:bg-blue-50">
+                                                                                <Download className="h-2.5 w-2.5 mr-0.5" /> DOC
+                                                                            </Badge>
+                                                                        </a>
                                                                     )}
                                                                 </div>
                                                                 <div className="flex items-center gap-2 mt-1.5">

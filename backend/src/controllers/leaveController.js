@@ -45,8 +45,11 @@ export const getAllLeaves = async (req, res) => {
 
             const studentIds = studentsInSec.map(s => s.studentId);
             query = { studentId: { $in: studentIds } };
+        } else if (user.role !== 'admin') {
+            // Unauthorized for other roles (e.g. teacher)
+            return res.status(403).json({ message: 'Access denied: Only advisors and admins can view all leave requests' });
         }
-        // Admin and Teacher roles see all for now (as before)
+        // Admin sees all (query remains empty)
 
         // Use raw collection to ensure we get attachments regardless of schema state
         const leaves = await LeaveRequest.collection.find(query).sort({ appliedOn: -1 }).toArray();

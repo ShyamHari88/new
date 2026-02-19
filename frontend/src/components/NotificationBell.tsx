@@ -17,11 +17,12 @@ export function NotificationBell() {
     const [pendingRequests, setPendingRequests] = useState<any[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const user = authService.getCurrentUser();
-    const isTeacher = user?.role === 'teacher' || user?.role === 'admin';
+    const isTeacher = user?.role === 'teacher';
+    const isAdvisor = user?.role === 'advisor' || user?.role === 'admin';
     const isStudent = user?.role === 'student';
 
     const fetchData = async () => {
-        if (isTeacher) {
+        if (isAdvisor) {
             const leaves = await dataService.getAllLeaves();
             setPendingRequests(leaves.filter((l: any) => l.status === 'pending'));
         }
@@ -35,7 +36,7 @@ export function NotificationBell() {
         fetchData();
         const interval = setInterval(fetchData, 30000);
         return () => clearInterval(interval);
-    }, [isTeacher, isStudent]);
+    }, [isAdvisor, isStudent]);
 
     const handleUpdateLeaveStatus = async (requestId: string, status: string) => {
         try {
@@ -67,7 +68,7 @@ export function NotificationBell() {
     };
 
     const unreadNotifications = notifications.filter(n => !n.isRead);
-    const totalCount = (isTeacher ? pendingRequests.length : 0) + unreadNotifications.length;
+    const totalCount = (isAdvisor ? pendingRequests.length : 0) + unreadNotifications.length;
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -97,8 +98,8 @@ export function NotificationBell() {
                 </div>
 
                 <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
-                    {/* Pending Leave Requests (Teachers only) */}
-                    {isTeacher && pendingRequests.length > 0 && (
+                    {/* Pending Leave Requests (Advisors only) */}
+                    {isAdvisor && pendingRequests.length > 0 && (
                         <div className="bg-amber-50/30">
                             <div className="px-4 py-2 border-b border-amber-100/50">
                                 <p className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">Pending Approvals</p>
@@ -184,7 +185,7 @@ export function NotificationBell() {
                             ))}
                         </div>
                     ) : (
-                        (!isTeacher || pendingRequests.length === 0) && (
+                        (!isAdvisor || pendingRequests.length === 0) && (
                             <div className="p-12 text-center">
                                 <div className="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
                                     <Bell className="h-8 w-8 text-slate-200" />

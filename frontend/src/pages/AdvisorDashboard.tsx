@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { authService, User } from '@/services/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { LogOut, UserCheck, CheckCircle, Clock, Users, CalendarDays, GraduationCap, X, Check, Mail, Pencil, Trash2, Search, Filter, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { LogOut, UserCheck, CheckCircle, Clock, Users, CalendarDays, GraduationCap, X, Check, Mail, Pencil, Trash2, Search, Filter, TrendingUp, TrendingDown, Minus, Image as ImageIcon, FileText, ExternalLink, Download, ArrowLeft } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import api from '@/services/api';
 
@@ -41,6 +41,12 @@ interface LeaveRequest {
     toDate: string;
     reason: string;
     status: string;
+    attachments?: {
+        name: string;
+        url: string;
+        type: string;
+        size?: number;
+    }[];
     createdAt: string;
 }
 
@@ -368,6 +374,15 @@ export default function AdvisorDashboard() {
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate('/dashboard')}
+                        className="text-slate-500 hover:text-indigo-600 flex items-center gap-2"
+                    >
+                        <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+                    </Button>
+                    <div className="h-6 w-px bg-slate-200 mx-2 hidden md:block" />
                     <span className="text-sm font-medium text-slate-700">{user?.name}</span>
                     <Button variant="ghost" size="icon" onClick={() => { authService.logout(); navigate('/login'); }} className="text-rose-500">
                         <LogOut className="h-5 w-5" />
@@ -605,6 +620,7 @@ export default function AdvisorDashboard() {
                                                 <TableHead>Type</TableHead>
                                                 <TableHead>Dates</TableHead>
                                                 <TableHead>Reason</TableHead>
+                                                <TableHead>Attachments</TableHead>
                                                 <TableHead className="text-right">Action</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -620,6 +636,37 @@ export default function AdvisorDashboard() {
                                                         {new Date(req.fromDate).toLocaleDateString()} - {new Date(req.toDate).toLocaleDateString()}
                                                     </TableCell>
                                                     <TableCell className="max-w-[200px] truncate" title={req.reason}>{req.reason}</TableCell>
+                                                    <TableCell>
+                                                        {req.attachments && req.attachments.length > 0 ? (
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {req.attachments.map((att, i) => (
+                                                                    <a
+                                                                        key={i}
+                                                                        href={att.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="group relative h-10 w-10 border rounded-md overflow-hidden bg-slate-100 flex items-center justify-center hover:ring-2 hover:ring-indigo-500 transition-all"
+                                                                        title={att.name}
+                                                                    >
+                                                                        {att.type.startsWith('image/') ? (
+                                                                            <img
+                                                                                src={att.url}
+                                                                                alt={att.name}
+                                                                                className="h-full w-full object-cover"
+                                                                            />
+                                                                        ) : (
+                                                                            <FileText className="h-5 w-5 text-slate-400 group-hover:text-indigo-500" />
+                                                                        )}
+                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            <ExternalLink className="h-3 w-3 text-white drop-shadow" />
+                                                                        </div>
+                                                                    </a>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-400">-</span>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell className="text-right space-x-2">
                                                         <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => handleLeaveAction(req.requestId, 'approved')}>
                                                             <Check className="h-4 w-4" />
@@ -783,6 +830,11 @@ export default function AdvisorDashboard() {
                             <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
                         </div>
                     )}
+                    <DialogFooter className="border-t pt-4 mt-6">
+                        <Button variant="outline" onClick={() => setIsDetailsOpen(false)} className="flex items-center gap-2">
+                            <ArrowLeft className="h-4 w-4" /> Close details
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>
