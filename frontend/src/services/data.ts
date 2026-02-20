@@ -1008,7 +1008,7 @@ export const dataService = {
         try {
             const { default: api } = await import('./api');
             const response = await api.get(`/leaves/student/${studentId}`);
-            return response.data.leaves;
+            return response.data.leaves || [];
         } catch (error) {
             console.error('Error fetching student leaves:', error);
             return [];
@@ -1019,7 +1019,7 @@ export const dataService = {
         try {
             const { default: api } = await import('./api');
             const response = await api.get('/leaves/all');
-            return response.data.leaves;
+            return response.data.leaves || [];
         } catch (error) {
             console.error('Error fetching all leaves:', error);
             return [];
@@ -1066,7 +1066,7 @@ export const dataService = {
         try {
             const { default: api } = await import('./api');
             const response = await api.get('/notifications');
-            return response.data.notifications;
+            return response.data.notifications || [];
         } catch (error) {
             console.error('Error fetching notifications:', error);
             return [];
@@ -1109,7 +1109,7 @@ export const dataService = {
             const response = await api.get('/timetable/class', {
                 params: { departmentId, year, section }
             });
-            return response.data.timetable;
+            return response.data.timetable || [];
         } catch (error) {
             console.error('Error fetching timetable:', error);
             return [];
@@ -1131,7 +1131,7 @@ export const dataService = {
         try {
             const { default: api } = await import('./api');
             const response = await api.get(`/timetable/teacher/${teacherId}`);
-            return response.data.timetable;
+            return response.data.timetable || [];
         } catch (error) {
             console.error('Error fetching teacher timetable:', error);
             return [];

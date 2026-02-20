@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AssessmentType, Semester } from '@/types/attendance';
 import { semesters, departments } from '@/data/mockData';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { LogOut, CheckCircle2, XCircle, History, Calendar as CalendarIcon, MessageSquare, ExternalLink, ChevronRight, TrendingUp, ShieldCheck, AlertTriangle, Plus, User, ArrowUpRight, Clock, Download, FileText, Bell, Layout, GraduationCap } from 'lucide-react';
+import { LogOut, CheckCircle2, XCircle, History, Calendar as CalendarIcon, MessageSquare, ExternalLink, ChevronRight, TrendingUp, ShieldCheck, AlertTriangle, Plus, User, ArrowUpRight, Clock, Download, FileText, Bell, Layout, GraduationCap, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { NotificationBell } from '@/components/NotificationBell';

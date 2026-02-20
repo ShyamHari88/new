@@ -22,8 +22,8 @@ router.get('/student/:studentId', getStudentAttendance);
 // Get detailed attendance history for a student
 router.get('/student/:studentId/history', getStudentAttendanceHistory);
 
-// Get all student stats (bulk) - Teachers and Admins only
-router.get('/stats/bulk', authorize('teacher', 'admin'), getAllStudentStats);
+// Get all student stats (bulk) - Teachers, Admins, and Advisors
+router.get('/stats/bulk', authorize('teacher', 'admin', 'advisor'), getAllStudentStats);
 
 // Add attendance records (Only Teachers and Admins)
 router.post('/', authorize('teacher', 'admin'), addAttendanceRecords);

@@ -15,13 +15,13 @@ router.use(authenticate);
 // Get student marks
 router.get('/student/:studentId', getStudentMarks);
 
-// Add marks (Teacher/Admin only)
-router.post('/', authorize('teacher', 'admin'), addMarks);
+// Add marks (Teacher/Admin/Advisor only)
+router.post('/', authorize('teacher', 'admin', 'advisor'), addMarks);
 
-// Update a mark (Teacher/Admin only)
-router.put('/:id', authorize('teacher', 'admin'), updateMark);
+// Update a mark (Teacher/Admin/Advisor only)
+router.put('/:id', authorize('teacher', 'admin', 'advisor'), updateMark);
 
-// Get all marks (for teachers)
-router.get('/', authorize('teacher', 'admin'), getAllMarks);
+// Get all marks (for teachers/admins/advisors)
+router.get('/', authorize('teacher', 'admin', 'advisor'), getAllMarks);
 
 export default router;

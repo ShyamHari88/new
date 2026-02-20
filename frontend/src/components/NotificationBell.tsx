@@ -67,8 +67,8 @@ export function NotificationBell() {
         }
     };
 
-    const unreadNotifications = notifications.filter(n => !n.isRead);
-    const totalCount = (isAdvisor ? pendingRequests.length : 0) + unreadNotifications.length;
+    const unreadNotifications = Array.isArray(notifications) ? notifications.filter(n => n && !n.isRead) : [];
+    const totalCount = (isAdvisor ? (Array.isArray(pendingRequests) ? pendingRequests.length : 0) : 0) + unreadNotifications.length;
 
     return (
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
