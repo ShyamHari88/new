@@ -1,6 +1,8 @@
 import Marks from '../models/Marks.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import { sendPushNotification } from '../services/pushService.js';
+
 
 // Get marks for a student
 export const getStudentMarks = async (req, res) => {
@@ -68,15 +70,25 @@ export const addMarks = async (req, res) => {
             for (const mark of marks) {
                 const user = users.find(u => u.studentId === mark.studentId);
                 if (user) {
+                    const title = 'New Marks Uploaded';
+                    const message = `Marks for ${mark.subjectName} (${mark.assessmentType}) have been uploaded.`;
+
                     notifications.push({
                         userId: user.userId,
-                        title: 'New Marks Uploaded',
-                        message: `Marks for ${mark.subjectName} (${mark.assessmentType}) have been uploaded.`,
+                        title,
+                        message,
                         type: 'mark_alert',
                         senderId: req.user?.userId || 'system'
                     });
+
+                    // Trigger Push Notification
+                    sendPushNotification(user.userId, title, message, {
+                        url: '/student/marks-history',
+                        type: 'mark_alert'
+                    }).catch(err => console.error('Push fail (marks):', err));
                 }
             }
+
 
             if (notifications.length > 0) {
                 await Notification.insertMany(notifications);
@@ -168,17 +180,27 @@ export const updateMark = async (req, res) => {
         try {
             const user = await User.findOne({ studentId: updatedMark.studentId });
             if (user) {
+                const title = 'Marks Updated';
+                const message = `Your marks for ${updatedMark.subjectName} (${updatedMark.assessmentType}) have been updated to ${marks}.`;
+
                 await Notification.create({
                     userId: user.userId,
-                    title: 'Marks Updated',
-                    message: `Your marks for ${updatedMark.subjectName} (${updatedMark.assessmentType}) have been updated to ${marks}.`,
+                    title,
+                    message,
                     type: 'mark_alert',
                     senderId: req.user?.userId || 'system'
                 });
+
+                // Trigger Push Notification
+                sendPushNotification(user.userId, title, message, {
+                    url: '/student/marks-history',
+                    type: 'mark_alert'
+                }).catch(err => console.error('Push fail (mark-update):', err));
             }
         } catch (notifError) {
             console.error('Error creating notification for mark update:', notifError);
         }
+
 
         res.json({
             success: true,

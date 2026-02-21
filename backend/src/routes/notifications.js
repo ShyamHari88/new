@@ -4,7 +4,9 @@ import {
     getMyNotifications,
     createNotification,
     markAsRead,
-    markAllRead
+    markAllRead,
+    subscribePush,
+    unsubscribePush
 } from '../controllers/notificationController.js';
 import { authenticate } from '../middleware/auth.js';
 
@@ -17,4 +19,9 @@ router.post('/', createNotification);
 router.put('/:id/read', markAsRead);
 router.put('/read-all', markAllRead);
 
+// Push Notification Subscriptions
+router.post('/subscribe', subscribePush);
+router.post('/unsubscribe', unsubscribePush);
+
 export default router;
+

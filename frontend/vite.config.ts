@@ -14,7 +14,11 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      strategy: 'injectManifest',
+      srcDir: 'src',
+      filename: 'service-worker.js',
       registerType: "autoUpdate",
+
       includeAssets: ["easy-attendance-logo.png", "favicon.ico"],
       manifest: {
         name: "ClassConnect – Student Portal",

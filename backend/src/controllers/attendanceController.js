@@ -3,7 +3,9 @@ import Student from '../models/Student.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import * as emailService from '../services/emailService.js';
+import { sendPushNotification } from '../services/pushService.js';
 import crypto from 'crypto';
+
 
 // Get attendance records for a student
 export const getStudentAttendance = async (req, res) => {
@@ -95,14 +97,24 @@ export const addAttendanceRecords = async (req, res) => {
             for (const record of records) {
                 const userId = userMap.get(record.studentId);
                 if (userId) {
+                    const title = `Attendance Marked: ${record.subjectName}`;
+                    const message = `You have been marked ${record.status.toUpperCase()} for ${record.subjectName} (Period ${record.period}) on ${new Date(record.date).toLocaleDateString()}.`;
+
                     notifications.push({
                         userId,
-                        title: `Attendance Marked: ${record.subjectName}`,
-                        message: `You have been marked ${record.status.toUpperCase()} for ${record.subjectName} (Period ${record.period}) on ${new Date(record.date).toLocaleDateString()}.`,
+                        title,
+                        message,
                         type: 'attendance_alert',
                         senderId: req.user.userId
                     });
+
+                    // Trigger Push Notification in background
+                    sendPushNotification(userId, title, message, {
+                        url: '/student-dashboard',
+                        type: 'attendance_alert'
+                    }).catch(err => console.error('Push fail:', err));
                 }
+
 
                 // Email notification for absent students (parents)
                 if (record.status === 'absent') {

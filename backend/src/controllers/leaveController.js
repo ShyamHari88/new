@@ -4,7 +4,9 @@ import AttendanceRecord from '../models/AttendanceRecord.js';
 import Student from '../models/Student.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import { sendPushNotification } from '../services/pushService.js';
 import crypto from 'crypto';
+
 
 export const applyLeave = async (req, res) => {
     try {
@@ -150,15 +152,27 @@ export const updateLeaveStatus = async (req, res) => {
 
         // Send notification to student
         try {
+            const studentUser = await User.findOne({ studentId: leave.studentId });
+            const title = `Leave Request ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+            const message = `Your ${leave.type} request from ${new Date(leave.fromDate).toLocaleDateString()} to ${new Date(leave.toDate).toLocaleDateString()} has been ${status}.`;
+
             await Notification.create({
                 userId: leave.studentId,
-                title: `Leave Request ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-                message: `Your ${leave.type} request from ${new Date(leave.fromDate).toLocaleDateString()} to ${new Date(leave.toDate).toLocaleDateString()} has been ${status}.`,
+                title,
+                message,
                 type: 'leave_update'
             });
+
+            if (studentUser) {
+                sendPushNotification(studentUser.userId, title, message, {
+                    url: '/student-dashboard',
+                    type: 'leave_update'
+                }).catch(err => console.error('Push fail (leave):', err));
+            }
         } catch (noteError) {
             console.error('Error sending leave notification:', noteError);
         }
+
 
         res.json({
             success: true,
