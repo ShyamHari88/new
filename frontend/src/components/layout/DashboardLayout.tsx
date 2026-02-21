@@ -52,9 +52,9 @@ export const DashboardLayout = () => {
     ];
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar */}
-            <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
+        <div className="flex min-h-screen bg-gray-50 mobile-layout-root">
+            {/* Sidebar — hidden on mobile via .mobile-sidebar CSS class */}
+            <aside className="mobile-sidebar w-56 bg-white border-r border-gray-200 flex flex-col">
                 {/* Logo Section */}
                 <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center gap-2 mb-1">
@@ -115,7 +115,7 @@ export const DashboardLayout = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto flex flex-col">
+            <main className="flex-1 overflow-auto flex flex-col mobile-main-content">
                 {/* Top Bar with Notification */}
                 <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-end">
                     <NotificationBell />
@@ -124,6 +124,32 @@ export const DashboardLayout = () => {
                     <Outlet />
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation — hidden on desktop, visible on mobile via CSS */}
+            <nav className="mobile-bottom-nav" style={{ display: 'none' }}>
+                {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                        <Link
+                            key={item.path}
+                            to={item.path}
+                            className={cn(isActive ? 'active' : '')}
+                            style={{ color: isActive ? '#2563eb' : undefined }}
+                        >
+                            <Icon style={{ width: 20, height: 20 }} />
+                            <span>{item.label.split(' ')[0]}</span>
+                        </Link>
+                    );
+                })}
+                <button
+                    onClick={handleLogout}
+                    style={{ color: '#ef4444' }}
+                >
+                    <LogOut style={{ width: 20, height: 20 }} />
+                    <span>Logout</span>
+                </button>
+            </nav>
         </div>
     );
 };
