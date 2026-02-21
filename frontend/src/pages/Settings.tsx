@@ -82,6 +82,28 @@ const Settings = () => {
                                     />
                                 </div>
 
+                                {status === 'subscribed' && (
+                                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-2">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="w-full bg-blue-50 text-blue-600 hover:bg-blue-100 border-none font-bold text-[10px] h-9 rounded-xl"
+                                            onClick={async () => {
+                                                try {
+                                                    const api = (await import('@/services/api')).default;
+                                                    await api.post('/notifications/test-push');
+                                                    toast.success("Test sent!", { description: "Check your device lock screen now." });
+                                                } catch (e) {
+                                                    toast.error("Failed to send test. Try refreshing.");
+                                                }
+                                            }}
+                                        >
+                                            <Bell className="h-3 w-3 mr-2" />
+                                            SEND TEST NOTIFICATION
+                                        </Button>
+                                    </div>
+                                )}
+
                                 {status === 'blocked' && (
                                     <div className="mt-4 flex items-start gap-2 p-3 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 animate-in fade-in slide-in-from-top-1">
                                         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />

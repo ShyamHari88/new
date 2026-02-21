@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       srcDir: 'src',
       filename: 'service-worker.js',
       registerType: "autoUpdate",
-
+      injectRegister: 'auto',
       includeAssets: ["easy-attendance-logo.png", "favicon.ico"],
       manifest: {
         name: "ClassConnect – Student Portal",
@@ -59,29 +59,15 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      workbox: {
-        // Cache all pages and assets
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        runtimeCaching: [
-          {
-            // Cache API calls for offline-like experience
-            urlPattern: /^https?:\/\/.*\/api\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24, // 24 hours
-              },
-              networkTimeoutSeconds: 10,
-            },
-          },
-        ],
       },
       devOptions: {
-        enabled: true, // Enable PWA in dev mode for testing
+        enabled: true,
+        type: 'module', // Required for injectManifest in dev mode
       },
     }),
+
   ].filter(Boolean),
   resolve: {
     alias: {
