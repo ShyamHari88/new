@@ -99,11 +99,13 @@ export const subscribePush = async (req, res) => {
         );
 
         res.status(200).json({ success: true, message: 'Push subscription registered' });
+        console.log(`[PUSH] 📱 New subscription registered for User: ${userId} (${deviceType || 'mobile'})`);
     } catch (error) {
         console.error('Push subscribe error:', error);
         res.status(500).json({ success: false, message: 'Error registering push subscription' });
     }
 };
+
 
 export const unsubscribePush = async (req, res) => {
     try {

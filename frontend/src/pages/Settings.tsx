@@ -92,7 +92,7 @@ const Settings = () => {
                                                 try {
                                                     const api = (await import('@/services/api')).default;
                                                     await api.post('/notifications/test-push');
-                                                    toast.success("Test sent!", { description: "Check your device lock screen now." });
+                                                    toast.success("Test triggering...", { description: "Check your lock screen in 2 seconds." });
                                                 } catch (e) {
                                                     toast.error("Failed to send test. Try refreshing.");
                                                 }
@@ -114,10 +114,32 @@ const Settings = () => {
                                 )}
 
                                 {status === 'unsupported' && (
-                                    <div className="mt-4 p-3 bg-slate-100 text-slate-600 rounded-xl border border-slate-200 text-[10px] font-medium">
-                                        Native notifications are not supported by this browser.
+                                    <div className="mt-4 p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-100 text-[10px] font-medium leading-relaxed">
+                                        <AlertCircle className="h-4 w-4 inline mr-2 text-amber-500" />
+                                        Your browser or connection (HTTP) doesn't support native notifications. Please use HTTPS or a modern browser like Chrome/Safari.
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Mobile Troubleshooting Tips */}
+                            <div className="mt-6 space-y-3">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Mobile Tips</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                                        <p className="text-[10px] font-bold text-slate-800 mb-1">🍎 iOS User?</p>
+                                        <ul className="text-[9px] text-slate-500 space-y-1">
+                                            <li>• Use **Add to Home Screen** (Share menu)</li>
+                                            <li>• Ensure iOS version is 16.4+</li>
+                                        </ul>
+                                    </div>
+                                    <div className="p-3 bg-white border border-slate-100 rounded-xl">
+                                        <p className="text-[10px] font-bold text-slate-800 mb-1">🤖 Android User?</p>
+                                        <ul className="text-[9px] text-slate-500 space-y-1">
+                                            <li>• Use **Chrome** for best results</li>
+                                            <li>• Turn off 'Battery Saver' for alerts</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
