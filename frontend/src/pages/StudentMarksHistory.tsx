@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authService } from '@/services/auth';
 import api from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, Filter, TrendingUp, BookOpen, Clock, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, Download, Filter, TrendingUp, BookOpen, Clock, FileText, CheckCircle2, XCircle, Settings } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -166,9 +166,20 @@ export default function StudentMarksHistory() {
                             <p className="text-sm text-slate-500 font-medium">Detailed marks analysis and assessment history</p>
                         </div>
                     </div>
-                    <Button onClick={exportToCSV} variant="outline" className="gap-2 rounded-xl border-slate-200 bg-white hover:bg-slate-50 font-bold transition-all shadow-sm">
-                        <Download className="h-4 w-4" /> Export Report
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={() => navigate('/settings')}
+                            variant="outline"
+                            className="gap-2 rounded-xl border-slate-200 bg-white hover:bg-slate-50 font-bold transition-all shadow-sm"
+                        >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                        </Button>
+                        <Button onClick={exportToCSV} variant="outline" className="gap-2 rounded-xl border-slate-200 bg-white hover:bg-slate-50 font-bold transition-all shadow-sm">
+                            <Download className="h-4 w-4" /> Export Report
+                        </Button>
+                    </div>
+
                 </div>
 
                 {/* Filters */}

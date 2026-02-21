@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AssessmentType, Semester } from '@/types/attendance';
 import { semesters, departments } from '@/data/mockData';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { LogOut, CheckCircle2, XCircle, History, Calendar as CalendarIcon, MessageSquare, ExternalLink, ChevronRight, TrendingUp, ShieldCheck, AlertTriangle, Plus, User, ArrowUpRight, Clock, Download, FileText, Bell, Layout, GraduationCap, ArrowLeft } from 'lucide-react';
+import { LogOut, CheckCircle2, XCircle, History, Calendar as CalendarIcon, MessageSquare, ExternalLink, ChevronRight, TrendingUp, ShieldCheck, AlertTriangle, Plus, User, ArrowUpRight, Clock, Download, FileText, Bell, Layout, GraduationCap, ArrowLeft, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -272,7 +272,8 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex items-center gap-1.5 p-1 bg-slate-100/50 rounded-xl">
+                        <div className="flex items-center gap-1.5 p-1 bg-slate-100/50 rounded-xl overflow-x-auto max-w-[150px] sm:max-w-none no-scrollbar">
+
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -284,7 +285,16 @@ export default function StudentDashboard() {
                             <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black tracking-wider uppercase hover:bg-white hover:text-blue-600">
                                 <Download className="h-3 w-3 mr-1.5" /> Reports
                             </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 rounded-lg text-[10px] font-black tracking-wider uppercase hover:bg-white hover:text-blue-600"
+                                onClick={() => navigate('/settings')}
+                            >
+                                <Settings className="h-3 w-3 mr-1.5" /> Settings
+                            </Button>
                         </div>
+
 
                         <NotificationBell />
 
@@ -325,6 +335,30 @@ export default function StudentDashboard() {
                         </Select>
                     </div>
                 </div>
+
+                {/* Mobile Quick Action: Settings (High Visibility) */}
+                <div className="md:hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <Card
+                        className="rounded-[2.2rem] border-none bg-indigo-600 p-6 text-white shadow-xl shadow-indigo-200 active:scale-[0.98] transition-all cursor-pointer"
+                        onClick={() => navigate('/settings')}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                                    <Settings className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-sm uppercase tracking-tight">App Settings</h3>
+                                    <p className="text-[10px] text-indigo-100 font-bold opacity-80">Enable push alerts for marks & attendance</p>
+                                </div>
+                            </div>
+                            <div className="h-8 w-8 bg-white/10 rounded-full flex items-center justify-center">
+                                <ChevronRight className="h-4 w-4 text-white" />
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
 
                 {/* ROW 1: Top Stats Grid (3 Columns) - As per Sketch */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

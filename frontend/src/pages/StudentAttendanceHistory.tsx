@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { authService } from '@/services/auth';
 import api from '@/services/api';
 import { Button } from '@/components/ui/button';
-import { Calendar, CheckCircle2, XCircle, Clock, Filter, Download, ArrowLeft } from 'lucide-react';
+import { Calendar, CheckCircle2, XCircle, Clock, Filter, Download, ArrowLeft, Settings } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -192,15 +192,26 @@ export default function StudentAttendanceHistory() {
                             </p>
                         </div>
                     </div>
-                    <Button
-                        onClick={exportToCSV}
-                        variant="outline"
-                        className="gap-2"
-                        disabled={filteredRecords.length === 0}
-                    >
-                        <Download className="h-4 w-4" />
-                        Export CSV
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            onClick={() => navigate('/settings')}
+                            variant="outline"
+                            className="gap-2"
+                        >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                        </Button>
+                        <Button
+                            onClick={exportToCSV}
+                            variant="outline"
+                            className="gap-2"
+                            disabled={filteredRecords.length === 0}
+                        >
+                            <Download className="h-4 w-4" />
+                            Export CSV
+                        </Button>
+                    </div>
+
                 </div>
 
                 {/* Filters */}
