@@ -36,32 +36,39 @@ registerRoute(
 
 // Handle Push Notifications
 self.addEventListener('push', (event) => {
-    if (!event.data) return;
+    console.log('[SW] Push received:', event);
 
+    let data = {};
     try {
-        const data = event.data.json();
-        const options = {
-            body: data.body,
-            icon: data.icon || '/easy-attendance-logo.png',
-            badge: data.badge || '/easy-attendance-logo.png',
-            vibrate: [100, 50, 100],
-            data: {
-                url: data.data?.url || '/'
-            },
-            actions: [
-                { action: 'open', title: 'Open App' },
-                { action: 'close', title: 'Close' }
-            ],
-            tag: 'class-connect-notification',
-            renotify: true
-        };
-
-        event.waitUntil(
-            self.registration.showNotification(data.title, options)
-        );
+        if (event.data) {
+            data = event.data.json();
+        }
     } catch (err) {
-        console.error('Error handling push event:', err);
+        console.warn('[SW] Push data is not JSON, treating as text');
+        data = { title: 'ClassConnect Notification', body: event.data.text() };
     }
+
+    const title = data.title || 'ClassConnect Notification';
+    const options = {
+        body: data.body || 'You have a new update.',
+        icon: data.icon || '/easy-attendance-logo.png',
+        badge: data.badge || '/easy-attendance-logo.png',
+        vibrate: [100, 50, 100],
+        data: {
+            url: data.data?.url || data.url || '/'
+        },
+        actions: [
+            { action: 'open', title: 'Open App' },
+            { action: 'close', title: 'Close' }
+        ],
+        tag: data.tag || 'class-connect-notification',
+        renotify: true,
+        requireInteraction: true // Keeps notification visible until user interacts
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
 });
 
 // Handle Notification Clicks

@@ -272,7 +272,7 @@ export default function StudentDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 p-1 bg-slate-100/50 rounded-xl overflow-x-auto max-w-[150px] sm:max-w-none no-scrollbar">
+                        <div className="flex items-center gap-1.5 p-1 bg-slate-100/50 rounded-xl overflow-x-auto max-w-[200px] sm:max-w-none no-scrollbar">
 
                             <Button
                                 variant="ghost"
@@ -336,25 +336,28 @@ export default function StudentDashboard() {
                     </div>
                 </div>
 
-                {/* Mobile Quick Action: Settings (High Visibility) */}
-                <div className="md:hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Notification Settings Prompt - High Visibility */}
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <Card
-                        className="rounded-[2.2rem] border-none bg-indigo-600 p-6 text-white shadow-xl shadow-indigo-200 active:scale-[0.98] transition-all cursor-pointer"
+                        className="rounded-[2.2rem] border-none bg-indigo-600 p-6 text-white shadow-xl shadow-indigo-200 active:scale-[0.98] transition-all cursor-pointer overflow-hidden relative"
                         onClick={() => navigate('/settings')}
                     >
-                        <div className="flex items-center justify-between">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <Bell className="h-24 w-24 rotate-12" />
+                        </div>
+                        <div className="flex items-center justify-between relative z-10">
                             <div className="flex items-center gap-4">
                                 <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                                    <Settings className="h-6 w-6 text-white" />
+                                    <Smartphone className="h-6 w-6 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-sm uppercase tracking-tight">App Settings</h3>
-                                    <p className="text-[10px] text-indigo-100 font-bold opacity-80">Enable push alerts for marks & attendance</p>
+                                    <h3 className="font-black text-sm uppercase tracking-tight">Notification Settings</h3>
+                                    <p className="text-[10px] text-indigo-100 font-bold opacity-80">Enable popup alerts for your marks & attendance</p>
                                 </div>
                             </div>
-                            <div className="h-8 w-8 bg-white/10 rounded-full flex items-center justify-center">
-                                <ChevronRight className="h-4 w-4 text-white" />
-                            </div>
+                            <Button size="sm" className="bg-white text-indigo-600 hover:bg-indigo-50 font-black text-[10px] px-4 rounded-lg border-none shadow-sm">
+                                CONFIGURE
+                            </Button>
                         </div>
                     </Card>
                 </div>

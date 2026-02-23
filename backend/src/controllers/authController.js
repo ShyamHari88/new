@@ -5,9 +5,9 @@ import Student from '../models/Student.js';
 import { sendPasswordResetEmail, sendWelcomeEmail } from '../services/emailService.js';
 
 // Generate JWT Token
-const generateToken = (userId, role) => {
+const generateToken = (userId, role, _id) => {
     return jwt.sign(
-        { userId, role },
+        { userId, role, _id },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRE || '7d' }
     );
@@ -82,7 +82,7 @@ export const studentSignup = async (req, res) => {
         console.log(`[AUTH] Student record created`);
 
         // Generate token
-        const token = generateToken(user.userId, user.role);
+        const token = generateToken(user.userId, user.role, user._id);
 
         // Send response FIRST
         res.status(201).json({
@@ -157,7 +157,7 @@ export const studentLogin = async (req, res) => {
 
         // Generate token
         console.log(`[AUTH] Generating token for student: ${rollNumber}`);
-        const token = generateToken(user.userId, user.role);
+        const token = generateToken(user.userId, user.role, user._id);
 
         console.log(`[AUTH] Login success for student: ${rollNumber}`);
         res.json({
@@ -220,7 +220,7 @@ export const teacherSignup = async (req, res) => {
         });
 
         // Generate token
-        const token = generateToken(user.userId, user.role);
+        const token = generateToken(user.userId, user.role, user._id);
 
         // Send response FIRST
         res.status(201).json({
@@ -274,7 +274,7 @@ export const teacherLogin = async (req, res) => {
         }
 
         // Generate token
-        const token = generateToken(user.userId, user.role);
+        const token = generateToken(user.userId, user.role, user._id);
 
         res.json({
             success: true,
@@ -325,7 +325,7 @@ export const adminLogin = async (req, res) => {
         }
 
         // Generate token
-        const token = generateToken(user.userId, user.role);
+        const token = generateToken(user.userId, user.role, user._id);
 
         res.json({
             success: true,
@@ -511,7 +511,7 @@ export const advisorLogin = async (req, res) => {
         }
 
         // Generate token
-        const token = generateToken(user.userId, user.role);
+        const token = generateToken(user.userId, user.role, user._id);
 
         res.json({
             success: true,

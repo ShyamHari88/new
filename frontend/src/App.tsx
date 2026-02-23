@@ -51,8 +51,13 @@ const App = () => (
             <Route path="/marks" element={<Marks />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/history" element={<History />} />
-            <Route path="/settings" element={<Settings />} />
           </Route>
+
+          <Route path="/settings" element={
+            <RequireAuth role={["student", "teacher", "admin", "advisor"]}>
+              <Settings />
+            </RequireAuth>
+          } />
 
           {/* Student Routes */}
           <Route path="/student-dashboard" element={

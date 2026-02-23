@@ -3,7 +3,7 @@ import { authService, Role } from '@/services/auth';
 
 interface RequireAuthProps {
     children: JSX.Element;
-    role?: Role; // If omitted, just checks if logged in
+    role?: Role | Role[]; // Support single role or multiple roles
 }
 
 export const RequireAuth = ({ children, role }: RequireAuthProps) => {
@@ -14,17 +14,22 @@ export const RequireAuth = ({ children, role }: RequireAuthProps) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (role && user.role !== role) {
-        // Redirect to their appropriate dashboard if they try to access wrong area
-        let dest = '/login';
-        if (user.role === 'admin') {
-            dest = '/admin/dashboard';
-        } else if (user.role === 'teacher') {
-            dest = '/dashboard';
-        } else if (user.role === 'student') {
-            dest = '/student-dashboard';
+    if (role) {
+        const roles = Array.isArray(role) ? role : [role];
+        if (!roles.includes(user.role as Role)) {
+            // Redirect to their appropriate dashboard if they try to access wrong area
+            let dest = '/login';
+            if (user.role === 'admin') {
+                dest = '/admin/dashboard';
+            } else if (user.role === 'teacher') {
+                dest = '/dashboard';
+            } else if (user.role === 'student') {
+                dest = '/student-dashboard';
+            } else if (user.role === 'advisor') {
+                dest = '/advisor/dashboard';
+            }
+            return <Navigate to={dest} replace />;
         }
-        return <Navigate to={dest} replace />;
     }
 
     return children;

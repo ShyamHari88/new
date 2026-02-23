@@ -80,11 +80,23 @@ export const subscribePush = async (req, res) => {
     try {
         const { subscription, deviceType } = req.body;
         const userId = req.user.userId;
-        const userObjectId = req.user._id;
+        let userObjectId = req.user._id;
 
         if (!subscription || !subscription.endpoint) {
             return res.status(400).json({ success: false, message: 'Invalid subscription data' });
         }
+
+        // If userObjectId is missing from token (older tokens), find it
+        if (!userObjectId) {
+            const user = await User.findOne({ userId });
+            if (user) {
+                userObjectId = user._id;
+            } else {
+                return res.status(404).json({ success: false, message: 'User not found' });
+            }
+        }
+
+        console.log(`[PUSH] Registering subscription for User: ${userId}, ObjectId: ${userObjectId}`);
 
         // Upsert the subscription (update if exists, insert if not)
         await PushSubscription.findOneAndUpdate(
@@ -102,7 +114,7 @@ export const subscribePush = async (req, res) => {
         console.log(`[PUSH] 📱 New subscription registered for User: ${userId} (${deviceType || 'mobile'})`);
     } catch (error) {
         console.error('Push subscribe error:', error);
-        res.status(500).json({ success: false, message: 'Error registering push subscription' });
+        res.status(500).json({ success: false, message: 'Error registering push subscription', detail: error.message });
     }
 };
 
