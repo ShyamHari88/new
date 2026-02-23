@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Bell, ShieldCheck, Smartphone, Laptop, AlertCircle } from "lucide-react";
+import { Bell, ShieldCheck, Phone, Laptop, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { checkPushSubscriptionStatus, requestNotificationPermission, unsubscribeUserFromPush } from "@/lib/push-notifications";
 import { toast } from "sonner";
@@ -51,7 +51,7 @@ const Settings = () => {
                 <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 md:p-10">
                     <div className="flex items-center gap-4">
                         <div className="p-3 bg-white/20 rounded-2xl">
-                            <Smartphone className="h-8 w-8" />
+                            <Phone className="h-8 w-8" />
                         </div>
                         <div>
                             <CardTitle className="text-2xl md:text-3xl font-bold">App Settings</CardTitle>
