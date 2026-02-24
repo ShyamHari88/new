@@ -42,7 +42,7 @@ const App = () => (
 
           {/* Teacher Routes */}
           <Route element={
-            <RequireAuth role="teacher">
+            <RequireAuth role={["teacher", "admin"]}>
               <DashboardLayout />
             </RequireAuth>
           }>
@@ -51,6 +51,7 @@ const App = () => (
             <Route path="/marks" element={<Marks />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/history" element={<History />} />
+            <Route path="/students" element={<Students />} />
           </Route>
 
           <Route path="/settings" element={

@@ -17,14 +17,16 @@ import { Link } from "react-router-dom";
 import api from "@/services/api";
 
 interface SessionData {
-    _id: string;
+    id?: string;
+    _id?: string;
     subject: string;
-    class: string;
+    class: string;  // computed client-side from classInfo if not present
     date: string;
     totalStudents: number;
     presentCount: number;
     absentCount: number;
-    attendancePercentage: number;
+    attendancePercentage: number; // computed client-side from presentCount/totalStudents
+    classInfo?: { departmentId: string; year: number; section: string };
 }
 
 const Dashboard = () => {
@@ -64,11 +66,22 @@ const Dashboard = () => {
             let sessions: SessionData[] = [];
             try {
                 const sessionsResponse = await api.get('/attendance/sessions');
-                if (sessionsResponse.data.sessions && Array.isArray(sessionsResponse.data.sessions)) {
-                    sessions = sessionsResponse.data.sessions;
-                } else if (Array.isArray(sessionsResponse.data)) {
-                    sessions = sessionsResponse.data;
-                }
+                const rawSessions = sessionsResponse.data.sessions && Array.isArray(sessionsResponse.data.sessions)
+                    ? sessionsResponse.data.sessions
+                    : Array.isArray(sessionsResponse.data) ? sessionsResponse.data : [];
+
+                // Normalize sessions: compute missing fields
+                sessions = rawSessions.map((s: any) => ({
+                    ...s,
+                    // Build a class label from classInfo if session.class is not present
+                    class: s.class || (s.classInfo
+                        ? `Dept ${s.classInfo.departmentId} - Year ${s.classInfo.year}${s.classInfo.section}`
+                        : 'N/A'),
+                    // Compute attendance percentage from counts if not already present
+                    attendancePercentage: s.attendancePercentage != null
+                        ? s.attendancePercentage
+                        : (s.totalStudents > 0 ? Math.round((s.presentCount / s.totalStudents) * 100) : 0),
+                }));
                 setRecentSessions(sessions.slice(0, 5));
             } catch (sessionError) {
                 console.error('Error fetching sessions:', sessionError);
@@ -83,7 +96,7 @@ const Dashboard = () => {
 
             const avgAttendance = sessions.length > 0
                 ? Math.round(sessions.reduce((acc: number, s: SessionData) =>
-                    acc + s.attendancePercentage, 0) / sessions.length)
+                    acc + (s.attendancePercentage || 0), 0) / sessions.length)
                 : 0;
 
             // 4. Update State
@@ -217,9 +230,9 @@ const Dashboard = () => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {recentSessions.map((session) => (
+                                {recentSessions.map((session, idx) => (
                                     <div
-                                        key={session._id}
+                                        key={session.id || session._id || idx}
                                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                                     >
                                         <div className="flex-1">
