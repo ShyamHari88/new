@@ -1,4 +1,5 @@
 {
+    "//": "Trigger push to verify GitHub connection",
     "version": 2,
     "builds": [
         {
