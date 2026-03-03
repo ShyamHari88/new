@@ -1,5 +1,4 @@
 {
-    "//": "Trigger push to verify GitHub connection",
     "version": 2,
     "builds": [
         {
@@ -17,15 +16,19 @@
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "backend/src/server.js"
+            "destination": "/backend/src/server.js"
         },
         {
-            "source": "/((?!api/).*\\.[a-z0-9]+)$",
-            "destination": "frontend/$1"
+            "source": "/(assets/.*)",
+            "destination": "/frontend/$1"
+        },
+        {
+            "source": "/([^/]+\\.[a-z0-9]+)$",
+            "destination": "/frontend/$1"
         },
         {
             "source": "/((?!api/).*)",
-            "destination": "frontend/index.html"
+            "destination": "/frontend/index.html"
         }
     ]
 }
