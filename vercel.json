@@ -16,7 +16,7 @@
     ],
     "functions": {
         "backend/src/server.js": {
-            "runtime": "vercel-node@latest"
+            "runtime": "@vercel/node"
         }
     },
     "cleanUrls": true

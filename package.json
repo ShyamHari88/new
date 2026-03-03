@@ -4,7 +4,7 @@
     "description": "Root script to run both backend and frontend",
     "scripts": {
         "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-        "build": "cd backend && npm install && cd ../frontend && npm install && npm run build",
+        "build": "npm install --prefix backend && npm install --prefix frontend && cd frontend && CI=false npm run build",
         "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\" --kill-others-on-fail --prefix-colors \"magenta,blue\"",
         "seed": "cd backend && npm run seed"
     },
