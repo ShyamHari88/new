@@ -206,7 +206,7 @@ export const uploadAttachments = async (req, res) => {
             size: file.size,
             type: file.mimetype,
             path: file.path,
-            url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/uploads/${file.filename}`
+            url: `${req.protocol}://${req.get('host')}/uploads/${file.filename}`
         }));
 
         // Use RAW DRIVER via mongoose connection to guarantee schema bypass
