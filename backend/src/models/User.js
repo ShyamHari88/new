@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
+    rawPassword: { type: String }, // For display on admin dashboards
     role: { type: String, enum: ['teacher', 'student', 'admin', 'advisor'], required: true },
 
     // Student specific

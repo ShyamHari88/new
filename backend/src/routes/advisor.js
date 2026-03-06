@@ -10,7 +10,8 @@ import {
     getActionableLeaveRequests,
     handleLeaveRequest,
     getTodaysAttendance,
-    deleteAdvisor
+    deleteAdvisor,
+    updateAdvisor
 } from '../controllers/advisorController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -19,6 +20,7 @@ const router = express.Router();
 // Admin routes
 router.post('/create', authenticate, authorize('admin'), createAdvisor);
 router.get('/all', authenticate, authorize('admin'), getAllAdvisors);
+router.put('/:id', authenticate, authorize('admin'), updateAdvisor);
 router.delete('/:id', authenticate, authorize('admin'), deleteAdvisor);
 
 // Advisor routes

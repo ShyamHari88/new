@@ -1,4 +1,4 @@
-﻿@import 'bootstrap/dist/css/bootstrap.min.css';
+﻿/* Bootstrap removed — conflicts with Tailwind + shadcn-ui */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 @tailwind base;
@@ -216,36 +216,61 @@
 }
 
 /* ============================================================
-   MOBILE RESPONSIVE STYLES — 360 × 800 (max-width: 480px)
+   MOBILE RESPONSIVE STYLES
+   Covers phones (max-width: 768px) and small phones (max-width: 480px)
    Desktop styles are completely unchanged.
    ============================================================ */
-@media (max-width: 480px) {
 
-  /* ── Global box-sizing & overflow fix ── */
-  * {
-    box-sizing: border-box;
-  }
+/* ── Mobile bottom nav (hidden by default, shown on mobile) ── */
+.mobile-bottom-nav {
+  display: none;
+}
 
-  body {
-    overflow-x: hidden;
-    -webkit-text-size-adjust: 100%;
-  }
+/* ── Utility: no-scrollbar ── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
-  /* ── DashboardLayout: Sidebar → Bottom Nav ── */
-  .mobile-layout-root {
-    flex-direction: column !important;
-  }
+/* ================================================================
+   TABLET + PHONE: max-width 768px
+   ================================================================ */
+@media (max-width: 768px) {
 
-  /* Sidebar hidden on mobile; bottom nav shown */
-  .mobile-sidebar {
+  /* ── Global ── */
+  * { box-sizing: border-box; }
+  body { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+  html { scroll-behavior: smooth; }
+
+  /* ── Prevent iOS zoom on input focus ── */
+  input, select, textarea { font-size: 16px !important; }
+
+  /* ── Admin Dashboard: Hide desktop sidebar, show mobile bottom nav ── */
+  aside.fixed.left-0 {
     display: none !important;
   }
 
-  .mobile-main-content {
-    padding-bottom: 70px !important;
-    /* space for bottom nav */
+  /* Admin main content — remove sidebar margin */
+  main.md\:ml-64 {
+    margin-left: 0 !important;
+    padding: 16px 14px 90px 14px !important;
   }
 
+  /* Admin header */
+  main.md\:ml-64 header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  main.md\:ml-64 header h2 {
+    font-size: 1.4rem !important;
+  }
+
+  /* Show mobile admin bottom nav */
   .mobile-bottom-nav {
     display: flex !important;
     position: fixed;
@@ -253,44 +278,62 @@
     left: 0;
     right: 0;
     z-index: 100;
-    background: #fff;
-    border-top: 1px solid #e2e8f0;
-    padding: 8px 0 env(safe-area-inset-bottom, 8px);
+    background: rgba(15, 23, 42, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 6px 0 env(safe-area-inset-bottom, 8px);
     justify-content: space-around;
     align-items: center;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
   }
 
-  .mobile-bottom-nav a,
   .mobile-bottom-nav button {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     font-size: 9px;
     font-weight: 700;
-    color: #64748b;
+    color: #94a3b8;
     text-decoration: none;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: color 0.2s;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: all 0.2s;
     background: none;
     border: none;
     cursor: pointer;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
-  .mobile-bottom-nav a.active,
-  .mobile-bottom-nav a:active {
-    color: #2563eb;
+  .mobile-bottom-nav button:active,
+  .mobile-bottom-nav button.active {
+    color: #60a5fa;
+    background: rgba(96, 165, 250, 0.1);
+  }
+
+  .mobile-bottom-nav button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* ── DashboardLayout sidebar → hidden on mobile ── */
+  .mobile-sidebar,
+  aside.mobile-sidebar {
+    display: none !important;
+  }
+
+  .mobile-main-content {
+    width: 100% !important;
+    padding-bottom: 80px !important;
   }
 
   /* ── Student Dashboard Header / Navbar ── */
   header.sticky {
     margin: 8px !important;
-    padding: 10px 14px !important;
-    border-radius: 1.2rem !important;
+    padding: 10px 12px !important;
+    border-radius: 1rem !important;
   }
 
   header.sticky h1 {
@@ -301,144 +344,101 @@
     font-size: 8px !important;
   }
 
-  /* Hide desktop nav buttons in student header */
-  header.sticky .hidden.sm\:flex {
-    display: none !important;
+  /* Compact nav buttons */
+  header.sticky .flex.items-center.gap-1\.5 {
+    gap: 2px !important;
+  }
+
+  header.sticky .flex.items-center.gap-1\.5 button {
+    padding: 4px 6px !important;
+    font-size: 8px !important;
   }
 
   /* ── Student Dashboard Main ── */
   main.mx-auto {
     padding-left: 12px !important;
     padding-right: 12px !important;
-    padding-top: 16px !important;
-    padding-bottom: 100px !important;
+    padding-top: 14px !important;
+    padding-bottom: 90px !important;
   }
 
-  /* Hero section - stack vertically */
-  .flex.flex-col.md\:flex-row.md\:items-end {
-    flex-direction: column !important;
-    gap: 12px !important;
-  }
-
-  /* Welcome heading */
-  h2.text-4xl {
-    font-size: 1.6rem !important;
-    line-height: 1.2 !important;
-  }
-
-  /* Filter row */
-  .flex.items-center.gap-2.p-2.bg-white.rounded-2xl {
-    width: 100% !important;
-    justify-content: space-between !important;
-  }
-
-  /* ── Card Grids → Single Column ── */
+  /* ── Card Grids → stack on tablet/phone ── */
   .grid.grid-cols-1.lg\:grid-cols-3,
   .grid.grid-cols-1.lg\:grid-cols-12,
-  .grid.grid-cols-1.lg\:grid-cols-2,
-  .grid.grid-cols-1.md\:grid-cols-3,
-  .grid.grid-cols-1.md\:grid-cols-2 {
+  .grid.grid-cols-1.lg\:grid-cols-2 {
     grid-template-columns: 1fr !important;
     gap: 14px !important;
   }
 
-  /* ── Stat Cards ── */
-  .stat-card {
-    padding: 14px !important;
+  /* lg:col-span-7 / lg:col-span-5 → full width */
+  .lg\:col-span-7,
+  .lg\:col-span-5 {
+    grid-column: span 1 !important;
   }
 
-  /* ── Student Profile Card ── */
-  /* Reduce header gradient height */
-  .h-24.premium-gradient {
-    height: 60px !important;
+  /* 2-col and 4-col stat grids → 2 cols */
+  .grid.grid-cols-1.md\:grid-cols-2,
+  .grid.grid-cols-1.md\:grid-cols-4,
+  .grid.grid-cols-2.md\:grid-cols-4,
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
   }
 
-  /* Avatar position */
-  .absolute.-bottom-10.left-8 {
-    bottom: -32px !important;
-    left: 16px !important;
-  }
+  /* ── Tables: horizontally scrollable ── */
+  table { min-width: 580px; }
 
-  .h-20.w-20.rounded-2xl {
-    height: 56px !important;
-    width: 56px !important;
-  }
-
-  /* Card content padding */
-  .pt-14.pb-8.px-8 {
-    padding-top: 42px !important;
-    padding-bottom: 18px !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  /* ── Big rounded cards (Letter Center, Guidelines) ── */
-  .rounded-\[3rem\] .p-10,
-  .p-10 {
-    padding: 18px !important;
-  }
-
-  /* Flex row in card headers → stack or shrink */
-  .flex.flex-row.items-center.justify-between {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  /* ── "NEW REQUEST" button in Letter Center ── */
-  .h-14.px-8 {
-    height: 40px !important;
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-    font-size: 9px !important;
-  }
-
-  /* ── Leave Request Cards ── */
-  .p-6.rounded-\[2\.5rem\] {
-    padding: 14px !important;
-    border-radius: 1rem !important;
-  }
-
-  /* ── Tables: make horizontally scrollable ── */
-  .overflow-hidden table,
-  table {
-    min-width: 520px;
-  }
-
-  .overflow-hidden,
-  [class*="CardContent"] {
+  .p-0, [class*="CardContent"] {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* ── Advisor Dashboard Header ── */
-  header.bg-white.border-b {
-    padding: 10px 14px !important;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  header.bg-white.border-b h1 {
-    font-size: 15px !important;
-  }
-
-  /* Hide "Back to Dashboard" text, keep icon */
-  header.bg-white.border-b .text-slate-500.hover\:text-indigo-600 span {
-    display: none;
-  }
-
-  /* Divider in advisor header */
-  .h-6.w-px.bg-slate-200.mx-2 {
-    display: none !important;
-  }
-
-  /* User name in advisor header */
-  .text-sm.font-medium.text-slate-700 {
-    font-size: 11px !important;
-    max-width: 80px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  /* ── Tabs list: horizontally scrollable ── */
+  [role="tablist"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap !important;
     white-space: nowrap;
+    scrollbar-width: none;
   }
+  [role="tablist"]::-webkit-scrollbar { display: none; }
+  [role="tab"] {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+    flex-shrink: 0;
+  }
+
+  /* ── Top action buttons row (Add Student, Import CSV etc) ── */
+  .flex.flex-wrap.items-center.gap-3,
+  .flex.items-center.gap-3 {
+    flex-wrap: wrap;
+  }
+
+  /* ── User Management header buttons ── */
+  .flex.justify-end.mb-4 {
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* ── Dialog: nearly full-width on mobile ── */
+  [data-radix-dialog-content] {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    border-radius: 1.2rem !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  [data-radix-dialog-content] .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Headings ── */
+  h2.text-3xl { font-size: 1.3rem !important; }
+  h2.text-4xl { font-size: 1.5rem !important; }
+  .text-5xl, .text-6xl { font-size: 1.7rem !important; }
 
   /* ── Advisor Dashboard Main ── */
   main.p-8 {
@@ -446,242 +446,192 @@
     padding-bottom: 80px !important;
   }
 
-  /* ── Tabs list scrollable on mobile ── */
-  [role="tablist"] {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-    flex-wrap: nowrap !important;
-    white-space: nowrap;
-    width: 100% !important;
-    scrollbar-width: none;
-  }
-
-  [role="tablist"]::-webkit-scrollbar {
-    display: none;
-  }
-
-  [role="tab"] {
-    padding: 6px 12px !important;
-    font-size: 11px !important;
-    flex-shrink: 0;
-  }
-
-  /* ── Search + Filter row in advisor ── */
-  .flex.flex-col.md\:flex-row.gap-4.items-center {
-    flex-direction: column !important;
-    gap: 8px !important;
-  }
-
-  .flex.gap-2.w-full.md\:w-auto {
-    width: 100% !important;
-    overflow-x: auto;
-  }
-
-  /* ── Summary stat cards in advisor ── */
-  .h-32 {
-    height: auto !important;
-    min-height: 80px !important;
-  }
-
-  /* ── Dialog: full width on mobile ── */
-  [role="dialog"]>div,
-  .fixed.inset-0>[data-radix-popper-content-wrapper],
-  [data-radix-dialog-content] {
-    max-width: 94vw !important;
-    width: 94vw !important;
-    border-radius: 1.5rem !important;
-    margin: auto !important;
-  }
-
-  /* Leave dialog form */
-  [data-radix-dialog-content] .px-8 {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  [data-radix-dialog-content] .py-10 {
-    padding-top: 20px !important;
-    padding-bottom: 20px !important;
-  }
-
-  /* Dialog date grid → single col */
-  [data-radix-dialog-content] .grid.grid-cols-2 {
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-  }
-
-  /* ── Admin Dashboard Header ── */
-  .admin-header,
-  .flex.items-center.justify-between.p-4 {
+  /* ── Advisor Dashboard Header ── */
+  header.bg-white.border-b {
+    padding: 10px 12px !important;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 14px !important;
+    gap: 6px;
   }
 
-  /* ── Login page ── */
-  .min-h-screen.flex.items-center.justify-center {
-    align-items: flex-start !important;
-    padding-top: 32px !important;
+  header.bg-white.border-b h1 {
+    font-size: 14px !important;
   }
 
-  .w-full.max-w-md {
-    max-width: 100% !important;
-    padding: 0 16px !important;
-  }
-
-  /* ── Attendance / marks history pages ── */
-  .min-h-screen .max-w-7xl {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-  }
-
-  /* ── Chart fix: prevent overflow ── */
+  /* ── Charts ── */
   .recharts-wrapper,
   .recharts-surface {
     max-width: 100% !important;
   }
 
-  /* Scroll area height adjustments */
-  .h-\[340px\] {
-    height: 260px !important;
-  }
-
-  .h-\[300px\] {
-    height: 220px !important;
-  }
-
   /* ── Footer ── */
   footer.mx-auto {
-    padding: 20px 12px !important;
+    padding: 16px 12px !important;
   }
-
   footer p {
     font-size: 8px !important;
     letter-spacing: 0.1em !important;
   }
 
-  /* ── Notification bell ── */
-  .notification-dropdown,
-  [data-radix-popper-content-wrapper] {
-    max-width: 92vw !important;
-    left: 4vw !important;
-    right: 4vw !important;
+  /* ── Login page ── */
+  .min-h-screen.flex.items-center.justify-center {
+    align-items: flex-start !important;
+    padding-top: 24px !important;
   }
 
-  /* ── Index / Landing page ── */
-  .text-5xl,
-  .text-6xl {
-    font-size: 1.8rem !important;
+  .w-full.max-w-md {
+    max-width: 100% !important;
+    padding: 0 14px !important;
   }
 
-  .text-4xl {
-    font-size: 1.5rem !important;
-  }
-
-  /* ── General spacing fixes ── */
-  .space-y-8 {
-    row-gap: 18px !important;
-  }
-
-  .gap-6 {
-    gap: 14px !important;
-  }
-
-  .px-6 {
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-  }
-
-  .py-8 {
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
-  }
-
-  /* ── 4-column grids (attendance/marks history summary stats) ── */
-  .grid.grid-cols-1.md\:grid-cols-4,
-  .grid.grid-cols-2.md\:grid-cols-4 {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-
-  /* ── Attendance/Marks History outer container ── */
-  .min-h-screen.bg-\[\#F8FAFC\].p-6 {
-    padding: 12px 10px !important;
-  }
-
-  /* ── Grid inside advisor dialog – 2 col semester grid → 2 col (fine for mobile) ── */
-  .grid.grid-cols-2.md\:grid-cols-4 {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
-  /* ── DashboardLayout aside – additional fallback hiding ── */
-  aside.mobile-sidebar {
-    display: none !important;
-  }
-
-  /* ── DashboardLayout main – remove sidebar margin ── */
-  main.mobile-main-content {
-    width: 100% !important;
-    padding-bottom: 75px !important;
-  }
-
-  /* ── Top bar in DashboardLayout ── */
-  .bg-white.border-b.border-gray-200.px-6.py-3 {
-    padding: 8px 12px !important;
-  }
-
-  /* ── Inner p-6 padding in DashboardLayout ── */
-  .p-6.flex-1 {
-    padding: 12px 10px !important;
-  }
+  /* ── General spacing ── */
+  .space-y-8 > * + * { margin-top: 16px !important; }
+  .gap-6 { gap: 12px !important; }
+  .px-6 { padding-left: 12px !important; padding-right: 12px !important; }
 
   /* ── Better touch targets ── */
-  button,
-  a,
-  [role="button"] {
+  button, a, [role="button"] {
     min-height: 36px;
   }
 
-  input,
-  select,
-  textarea {
-    font-size: 16px !important;
-    /* prevent iOS zoom */
+  /* ── Card rounding → reduce on mobile ── */
+  .rounded-\[2\.5rem\] { border-radius: 1.2rem !important; }
+  .rounded-\[3rem\] { border-radius: 1.3rem !important; }
+  .rounded-\[2\.2rem\] { border-radius: 1rem !important; }
+
+  /* ── Notification dropdown ── */
+  [data-radix-popper-content-wrapper] {
+    max-width: 92vw !important;
   }
 
-  /* ── Horizontal scroll indicator for tables ── */
+  /* ── Vertical scroll areas ── */
+  .h-\[340px\] { height: 250px !important; }
+  .h-\[300px\] { height: 200px !important; }
+  .h-\[600px\] { height: 380px !important; }
+
+  /* ── Student signup ── */
+  .min-h-screen.flex.items-center.justify-center.bg-gradient-to-br {
+    padding: 16px 0;
+    align-items: flex-start !important;
+  }
+}
+
+/* ================================================================
+   SMALL PHONE: max-width 480px — additional refinements
+   ================================================================ */
+@media (max-width: 480px) {
+
+  /* ── Admin main content — even tighter padding ── */
+  main.md\:ml-64 {
+    padding: 12px 10px 90px 10px !important;
+  }
+
+  /* ── Heroes / welcome ── */
+  .flex.flex-col.md\:flex-row.md\:items-end {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  h2.text-4xl {
+    font-size: 1.35rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* ── Student Profile Card ── */
+  .h-24.premium-gradient {
+    height: 56px !important;
+  }
+
+  .absolute.-bottom-10.left-8 {
+    bottom: -28px !important;
+    left: 14px !important;
+  }
+
+  .h-20.w-20.rounded-2xl {
+    height: 50px !important;
+    width: 50px !important;
+  }
+
+  .pt-14.pb-8.px-8 {
+    padding: 38px 14px 16px 14px !important;
+  }
+
+  /* ── Big rounded card padding ── */
+  .p-10 { padding: 14px !important; }
+  .p-8 { padding: 12px !important; }
+
+  /* ── Letter center ── */
+  .h-14.px-8 {
+    height: 38px !important;
+    padding: 0 12px !important;
+    font-size: 9px !important;
+  }
+
+  /* ── Leave request cards ── */
+  .p-6.rounded-\[2\.5rem\] {
+    padding: 12px !important;
+    border-radius: 0.9rem !important;
+  }
+
+  /* ── Filter dropdowns → full width ── */
+  .flex.flex-wrap.gap-4.mb-4 > div,
+  .flex.gap-4.mb-6 > div {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* ── Stat card values ── */
+  .text-3xl.font-bold,
+  .text-3xl.font-display {
+    font-size: 1.5rem !important;
+  }
+
+  /* ── 2-col grids force single-col ── */
+  .grid.grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Advisor table ── */
+  .h-6.w-px.bg-slate-200.mx-2 {
+    display: none !important;
+  }
+
+  /* ── nav buttons in student dashboard shrink ──  */
+  header.sticky .flex.items-center.gap-1\.5 button span {
+    display: none;
+  }
+
+  /* ── Search bar ── */
+  .flex.items-center.gap-2.p-2.bg-white.rounded-2xl {
+    width: 100% !important;
+  }
+
+  /* ── Horizontal scroll areas ── */
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
   }
 
-  /* ── Student marks history outer page ── */
+  /* ── Top bar in DashboardLayout ── */
+  .bg-white.border-b.border-gray-200.px-6.py-3 {
+    padding: 8px 10px !important;
+  }
+
+  /* ── Inner flex-1 p-6 ── */
+  .p-6.flex-1 {
+    padding: 10px 8px !important;
+  }
+
+  /* ── Attendance history page ── */
+  .min-h-screen.bg-\[\#F8FAFC\].p-6 {
+    padding: 10px 8px !important;
+  }
+
   .min-h-screen.bg-slate-50.p-6 {
-    padding: 12px 10px !important;
+    padding: 10px 8px !important;
   }
 
-  /* ── Card rounded corners – slightly reduce huge rounding on small screens ── */
-  .rounded-\[2\.5rem\] {
-    border-radius: 1.2rem !important;
-  }
-
-  .rounded-\[3rem\] {
-    border-radius: 1.4rem !important;
-  }
-
-  /* ── Attendance history record items ── */
+  /* ── Attendance history items ── */
   .flex.items-center.justify-between.p-4.bg-white {
     padding: 10px !important;
-  }
-
-  /* ── Marks history stats ── */
-  .h-\[600px\] {
-    height: 400px !important;
-  }
-
-  /* ── StudentSignup outer wrapper ── */
-  .min-h-screen.flex.items-center.justify-center.bg-gradient-to-br {
-    padding: 20px 0;
-    align-items: flex-start !important;
   }
 }

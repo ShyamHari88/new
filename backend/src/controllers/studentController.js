@@ -82,24 +82,31 @@ export const addStudent = async (req, res) => {
 // Update student
 export const updateStudent = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { name, email, rollNumber, departmentId, year, section, currentSemester } = req.body;
+        const { id } = req.params; // studentId
+        const { name, email, rollNumber, departmentId, year, section, currentSemester, password } = req.body;
 
-        const student = await Student.findOneAndUpdate(
-            { studentId: id },
-            { name, email, rollNumber, departmentId, year, section, currentSemester },
-            { new: true }
-        );
-
+        const student = await Student.findOne({ studentId: id });
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        // Also update user record
-        await User.findOneAndUpdate(
-            { studentId: id },
-            { name, email, rollNumber, departmentId, year, section, currentSemester }
-        );
+        const user = await User.findOne({ studentId: id });
+
+        if (name) { student.name = name; if (user) user.name = name; }
+        if (email) { student.email = email; if (user) user.email = email; }
+        if (rollNumber) { student.rollNumber = rollNumber; if (user) user.rollNumber = rollNumber; }
+        if (departmentId) { student.departmentId = departmentId; if (user) user.departmentId = departmentId; }
+        if (year) { student.year = parseInt(year); if (user) user.year = parseInt(year); }
+        if (section) { student.section = section; if (user) user.section = section; }
+        if (currentSemester) { student.currentSemester = parseInt(currentSemester); if (user) user.currentSemester = parseInt(currentSemester); }
+
+        if (password && user) {
+            user.password = password;
+            user.rawPassword = password;
+        }
+
+        await student.save();
+        if (user) await user.save();
 
         res.json({ success: true, message: 'Student updated successfully', student });
     } catch (error) {

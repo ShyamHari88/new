@@ -21,6 +21,7 @@ import {
     LogOut,
     Plus,
     Trash2,
+    Pencil,
     Search,
     BookOpen,
     BarChart3,
@@ -35,7 +36,8 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Download,
-    Filter
+    Filter,
+    Menu
 } from 'lucide-react';
 import {
     LineChart,
@@ -114,6 +116,11 @@ export default function AdminDashboard() {
     const [isAddTeacherOpen, setIsAddTeacherOpen] = useState(false);
     const [isAddAdvisorOpen, setIsAddAdvisorOpen] = useState(false);
     const [isAddSubjectOpen, setIsAddSubjectOpen] = useState(false);
+
+    // Edit states
+    const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+    const [editingUserType, setEditingUserType] = useState<any>(null);
+    const [editingUserData, setEditingUserData] = useState<any>(null);
 
     const [newStudent, setNewStudent] = useState({
         name: '', email: '', rollNumber: '', departmentId: '1', year: 1, section: 'A'
@@ -438,6 +445,34 @@ export default function AdminDashboard() {
         }));
         setActiveTab('subjects');
         setIsAddSubjectOpen(true);
+    };
+
+    const handleEditUser = (type: 'student' | 'teacher' | 'advisor', user: any) => {
+        setEditingUserType(type);
+        setEditingUserData({ ...user, password: user.rawPassword || '' });
+        setIsEditUserOpen(true);
+    };
+
+    const handleUpdateUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingUserType === 'teacher') {
+                await dataService.updateTeacher(editingUserData.teacherId || editingUserData.id, editingUserData);
+                toast.success('Teacher updated successfully');
+            } else if (editingUserType === 'advisor') {
+                await dataService.updateAdvisor(editingUserData.advisorId || editingUserData.id, editingUserData);
+                toast.success('Advisor updated successfully');
+            } else if (editingUserType === 'student') {
+                await dataService.updateStudent(editingUserData.studentId || editingUserData.id, editingUserData);
+                toast.success('Student updated successfully');
+            }
+            setIsEditUserOpen(false);
+            setEditingUserType(null);
+            setEditingUserData(null);
+            loadData();
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to update user');
+        }
     };
 
 
@@ -1073,14 +1108,24 @@ export default function AdminDashboard() {
                                                             <TableCell>{departments.find(d => d.id === student.departmentId)?.name || student.departmentId}</TableCell>
                                                             <TableCell>{student.year} - {student.section}</TableCell>
                                                             <TableCell className="text-right">
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="ghost"
-                                                                    className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                                                                    onClick={() => handleDeleteUser('student', student.id)}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
+                                                                <div className="flex justify-end gap-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                                        onClick={() => handleEditUser('student', { ...student, studentId: student.id })}
+                                                                    >
+                                                                        <Pencil className="h-4 w-4 mr-1" /> Edit
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="ghost"
+                                                                        className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                                                                        onClick={() => handleDeleteUser('student', student.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </div>
                                                             </TableCell>
                                                         </TableRow>
                                                     ))
@@ -1111,6 +1156,7 @@ export default function AdminDashboard() {
                                                     <TableHead>ID</TableHead>
                                                     <TableHead>Name</TableHead>
                                                     <TableHead>Email</TableHead>
+                                                    <TableHead>Password</TableHead>
                                                     <TableHead>Department</TableHead>
                                                     <TableHead>Subjects</TableHead>
                                                     <TableHead className="text-right">Actions</TableHead>
@@ -1122,6 +1168,11 @@ export default function AdminDashboard() {
                                                         <TableCell className="font-medium">{teacher.teacherId || 'N/A'}</TableCell>
                                                         <TableCell>{teacher.name}</TableCell>
                                                         <TableCell>{teacher.email}</TableCell>
+                                                        <TableCell>
+                                                            <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                                                {teacher.rawPassword || 'teacher123'}
+                                                            </span>
+                                                        </TableCell>
                                                         <TableCell>{departments.find(d => d.id === teacher.departmentId)?.name || teacher.departmentId}</TableCell>
                                                         <TableCell>
                                                             <div className="flex flex-wrap gap-1">
@@ -1138,6 +1189,14 @@ export default function AdminDashboard() {
                                                         </TableCell>
                                                         <TableCell className="text-right">
                                                             <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                                                                    onClick={() => handleEditUser('teacher', teacher)}
+                                                                >
+                                                                    <Pencil className="h-4 w-4 mr-1" /> Edit
+                                                                </Button>
                                                                 <Button
                                                                     size="sm"
                                                                     variant="outline"
@@ -1178,6 +1237,7 @@ export default function AdminDashboard() {
                                                     <TableHead>Advisor ID</TableHead>
                                                     <TableHead>Name</TableHead>
                                                     <TableHead>Email</TableHead>
+                                                    <TableHead>Password</TableHead>
                                                     <TableHead>Department</TableHead>
                                                     <TableHead>Section</TableHead>
                                                     <TableHead className="text-right">Actions</TableHead>
@@ -1189,17 +1249,32 @@ export default function AdminDashboard() {
                                                         <TableCell className="font-medium">{advisor.advisorId || 'N/A'}</TableCell>
                                                         <TableCell>{advisor.name}</TableCell>
                                                         <TableCell>{advisor.email}</TableCell>
-                                                        <TableCell>{advisor.departmentId}</TableCell>
+                                                        <TableCell>
+                                                            <span className="font-mono text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                                                                {advisor.rawPassword || 'advisor123'}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>{departments.find(d => d.id === advisor.departmentId)?.name || advisor.departmentId}</TableCell>
                                                         <TableCell>{advisor.section}</TableCell>
                                                         <TableCell className="text-right">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
-                                                                onClick={() => handleDeleteAdvisor(advisor.userId || advisor._id)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                                                                    onClick={() => handleEditUser('advisor', advisor)}
+                                                                >
+                                                                    <Pencil className="h-4 w-4 mr-1" /> Edit
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="text-rose-500 hover:text-rose-700 hover:bg-rose-50"
+                                                                    onClick={() => handleDeleteAdvisor(advisor.userId || advisor._id)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -1596,6 +1671,157 @@ export default function AdminDashboard() {
                     </div>
                 )}
             </main>
+
+            {/* ======= MOBILE BOTTOM NAV (shown < 768px via CSS) ======= */}
+            <nav className="mobile-bottom-nav">
+                <button
+                    onClick={() => setActiveTab('overview')}
+                    className={activeTab === 'overview' ? 'active' : ''}
+                >
+                    <LayoutDashboard />
+                    <span>Home</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('users')}
+                    className={activeTab === 'users' ? 'active' : ''}
+                >
+                    <Users />
+                    <span>Members</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('subjects')}
+                    className={activeTab === 'subjects' ? 'active' : ''}
+                >
+                    <BookOpen />
+                    <span>Subjects</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('attendance')}
+                    className={activeTab === 'attendance' ? 'active' : ''}
+                >
+                    <UserCheck />
+                    <span>Logs</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('reports')}
+                    className={activeTab === 'reports' ? 'active' : ''}
+                >
+                    <BarChart3 />
+                    <span>Analytics</span>
+                </button>
+            </nav>
+
+            {/* ======= EDIT USER DIALOG ======= */}
+            <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Pencil className="h-5 w-5 text-emerald-600" />
+                            Edit {editingUserType === 'teacher' ? 'Teacher' : editingUserType === 'advisor' ? 'Advisor' : 'Student'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Update the details below and click Save. Changes will be saved to MongoDB.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {editingUserData && (
+                        <form onSubmit={handleUpdateUser} className="space-y-4 py-2">
+                            {/* ID field */}
+                            <div>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                    {editingUserType === 'teacher' ? 'Teacher ID' : editingUserType === 'advisor' ? 'Advisor ID' : 'Roll Number'}
+                                </Label>
+                                <Input
+                                    value={editingUserType === 'student' ? (editingUserData.rollNumber || '') : (editingUserType === 'teacher' ? (editingUserData.teacherId || '') : (editingUserData.advisorId || ''))}
+                                    onChange={e => {
+                                        if (editingUserType === 'student') setEditingUserData({ ...editingUserData, rollNumber: e.target.value });
+                                        else if (editingUserType === 'teacher') setEditingUserData({ ...editingUserData, teacherId: e.target.value });
+                                        else setEditingUserData({ ...editingUserData, advisorId: e.target.value });
+                                    }}
+                                    className="mt-1"
+                                />
+                            </div>
+
+                            {/* Name */}
+                            <div>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Name</Label>
+                                <Input
+                                    value={editingUserData.name || ''}
+                                    onChange={e => setEditingUserData({ ...editingUserData, name: e.target.value })}
+                                    className="mt-1"
+                                />
+                            </div>
+
+                            {/* Email */}
+                            <div>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Email</Label>
+                                <Input
+                                    type="email"
+                                    value={editingUserData.email || ''}
+                                    onChange={e => setEditingUserData({ ...editingUserData, email: e.target.value })}
+                                    className="mt-1"
+                                />
+                            </div>
+
+                            {/* Password */}
+                            <div>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Password</Label>
+                                <Input
+                                    type="text"
+                                    placeholder="Leave blank to keep current password"
+                                    value={editingUserData.password || ''}
+                                    onChange={e => setEditingUserData({ ...editingUserData, password: e.target.value })}
+                                    className="mt-1 font-mono"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Type a new password or leave empty to keep the current one.</p>
+                            </div>
+
+                            {/* Department */}
+                            <div>
+                                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Department</Label>
+                                <Select value={editingUserData.departmentId || '1'} onValueChange={v => setEditingUserData({ ...editingUserData, departmentId: v })}>
+                                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        {departments.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Section (advisor/student only) */}
+                            {(editingUserType === 'advisor' || editingUserType === 'student') && (
+                                <div>
+                                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Section</Label>
+                                    <Select value={editingUserData.section || 'A'} onValueChange={v => setEditingUserData({ ...editingUserData, section: v })}>
+                                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {sections.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+
+                            {/* Year (student only) */}
+                            {editingUserType === 'student' && (
+                                <div>
+                                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Year</Label>
+                                    <Select value={(editingUserData.year || 1).toString()} onValueChange={v => setEditingUserData({ ...editingUserData, year: parseInt(v) })}>
+                                        <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            {years.map(y => <SelectItem key={y.value} value={y.value.toString()}>{y.label}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+
+                            <DialogFooter className="gap-2 sm:gap-0 pt-2">
+                                <Button type="button" variant="ghost" onClick={() => setIsEditUserOpen(false)} className="rounded-xl h-12">Cancel</Button>
+                                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-xl flex-1 shadow-lg shadow-emerald-500/20">
+                                    Save Changes
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

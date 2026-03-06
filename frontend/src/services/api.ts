@@ -30,11 +30,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            // Token expired or invalid
+        const isLoginRequest = error.config?.url?.includes('/login');
+        if (error.response?.status === 401 && !isLoginRequest) {
+            // Token expired or invalid (only for non-login requests)
             localStorage.removeItem('token');
             localStorage.removeItem('attendease_user');
-            window.location.href = '/login';
+            window.location.href = '/';
         }
         return Promise.reject(error);
     }

@@ -134,6 +134,17 @@ export const dataService = {
         }
     },
 
+    updateAdvisor: async (advisorId: string, updates: any) => {
+        try {
+            const { default: api } = await import('./api');
+            const response = await api.put(`/advisor/${advisorId}`, updates);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating advisor:', error);
+            throw error;
+        }
+    },
+
     // --- Students ---
     syncStudentsFromBackend: async (): Promise<Student[]> => {
         try {

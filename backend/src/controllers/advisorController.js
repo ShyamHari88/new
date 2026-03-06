@@ -33,6 +33,7 @@ export const createAdvisor = async (req, res) => {
             name,
             email: email || `${advisorId}@advisor.com`,
             password,
+            rawPassword: password,
             role: 'advisor',
             advisorId,
             departmentId,
@@ -131,6 +132,41 @@ export const getAllAdvisors = async (req, res) => {
         res.json(advisors);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching advisors' });
+    }
+};
+
+// Update Advisor
+export const updateAdvisor = async (req, res) => {
+    try {
+        const { id } = req.params; // old advisorId
+        const { name, email, departmentId, advisorId, section, password } = req.body;
+
+        const advisor = await User.findOne({ advisorId: id, role: 'advisor' });
+
+        if (!advisor) {
+            return res.status(404).json({ message: 'Advisor not found' });
+        }
+
+        if (name) advisor.name = name;
+        if (email) advisor.email = email;
+        if (departmentId) advisor.departmentId = departmentId;
+        if (advisorId) advisor.advisorId = advisorId;
+        if (section) advisor.section = section;
+
+        if (password) {
+            advisor.password = password; // Hashed by pre-save hook
+            advisor.rawPassword = password; // So admin can see it
+        }
+
+        await advisor.save();
+
+        const updatedAdvisor = advisor.toObject();
+        delete updatedAdvisor.password;
+
+        res.json({ success: true, message: 'Advisor updated successfully', advisor: updatedAdvisor });
+    } catch (error) {
+        console.error('Update advisor error:', error);
+        res.status(500).json({ message: 'Error updating advisor', error: error.message });
     }
 };
 

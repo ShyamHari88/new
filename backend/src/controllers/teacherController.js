@@ -15,20 +15,31 @@ export const getAllTeachers = async (req, res) => {
 // Update teacher
 export const updateTeacher = async (req, res) => {
     try {
-        const { id } = req.params; // teacherId
-        const { name, email, departmentId } = req.body;
+        const { id } = req.params; // old teacherId
+        const { name, email, departmentId, teacherId, password } = req.body;
 
-        const teacher = await User.findOneAndUpdate(
-            { teacherId: id, role: 'teacher' },
-            { name, email, departmentId },
-            { new: true }
-        ).select('-password');
+        const teacher = await User.findOne({ teacherId: id, role: 'teacher' });
 
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
 
-        res.json({ success: true, message: 'Teacher updated successfully', teacher });
+        if (name) teacher.name = name;
+        if (email) teacher.email = email;
+        if (departmentId) teacher.departmentId = departmentId;
+        if (teacherId) teacher.teacherId = teacherId; // Update ID if changed
+
+        if (password) {
+            teacher.password = password; // Hashed by pre-save hook
+            teacher.rawPassword = password; // So admin can see it
+        }
+
+        await teacher.save();
+
+        const updatedTeacher = teacher.toObject();
+        delete updatedTeacher.password; // Don't send back the hashed password
+
+        res.json({ success: true, message: 'Teacher updated successfully', teacher: updatedTeacher });
     } catch (error) {
         console.error('Update teacher error:', error);
         res.status(500).json({ message: 'Error updating teacher', error: error.message });
@@ -72,6 +83,7 @@ export const createTeacher = async (req, res) => {
             name,
             email,
             password, // Will be hashed by pre-save hook
+            rawPassword: password, // Saving explicitly for the frontend AdminDashboard
             role: 'teacher',
             teacherId,
             departmentId,
